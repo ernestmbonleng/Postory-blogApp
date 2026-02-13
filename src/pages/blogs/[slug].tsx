@@ -1,77 +1,211 @@
-import { GetServerSideProps } from "next";
-import { getPublicBlogBySlug } from "@/src/services/blogs";
-import DOMPurify from "dompurify";
+import { useRouter } from 'next/router';
+import { useQuery } from '@tanstack/react-query';
+import { useState } from 'react';
+import { getPublicBlogBySlug } from '@/src/services/blogs'; // Ensure this is your public service
+import Link from 'next/link';
+import { 
+  Bell, Check, Share2, Heart, Eye, Search, X, MessageSquare 
+} from 'lucide-react';
+import { format } from 'date-fns';
+import { useDashboardSearch } from '@/src/component/search/DashboardSearchShadow';
+import { SearchSuggestionsDropdown } from '@/src/component/search/SearchSuggestionsDropdown';
 
-type Blog = {
-  title: string;
-  content: string;
-  createdAt: string;
-  tags?: string[];
-};
+export default function PublicBlogChannelView() {
+  const router = useRouter();
+  const { slug } = router.query; // Grabs the slug from the URL: /blogs/[slug]
+  
+  const [activeTab, setActiveTab] = useState<'home' | 'about'>('home');
 
-type Props = {
-  blog: Blog;
-};
+  // 1. FETCH BLOG DATA (Client-side)
+  // This replaces getServerSideProps
+  const { data: blog, isLoading: blogLoading, error } = useQuery({
+    queryKey: ['public-blog', slug],
+    queryFn: () => getPublicBlogBySlug(slug as string),
+    enabled: !!slug, // Only run when the slug is available in the URL
+    retry: false,
+  });
 
-export default function BlogPage({ blog }: Props) {
+  // 2. SEARCH HOOK
+  const {
+    query,
+    setQuery,
+    results,
+    isLoading: searchLoading,
+    isActive: searchActive,
+    clearSearch,
+  } = useDashboardSearch();
+
+  // Loading State
+  if (blogLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-white">
+        <div className="h-10 w-10 border-4 border-indigo-600 border-t-transparent rounded-full animate-spin"></div>
+      </div>
+    );
+  }
+
+  // Error State (e.g., Blog not found)
+  if (error || !blog) {
+    return (
+      <div className="min-h-screen flex flex-col items-center justify-center bg-white p-6 text-center">
+        <h2 className="text-2xl font-bold text-gray-900">Blog Not Found</h2>
+        <p className="text-gray-500 mt-2">The blog you are looking for doesn't exist or has been moved.</p>
+        <Link href="/" className="mt-6 text-indigo-600 font-bold hover:underline">Back to Home</Link>
+      </div>
+    );
+  }
+
+  const posts = blog.posts || [];
+
   return (
-    <main style={{ maxWidth: 800, margin: "60px auto", padding: "0 20px" }}>
-      {/* Title */}
-      <h1 style={{ fontSize: "2.5rem", fontWeight: "bold", marginBottom: 10 }}>
-        {blog.title}
-      </h1>
-
-      {/* Date */}
-      <p style={{ color: "#777", marginBottom: 20 }}>
-        {new Date(blog.createdAt).toLocaleDateString()}
-      </p>
-
-      {/* Tags */}
-      {blog.tags && blog.tags.length > 0 && (
-        <div style={{ marginBottom: 20 }}>
-          {blog.tags.map((tag, index) => (
-            <span
-              key={index}
-              style={{
-                display: "inline-block",
-                background: "#eee",
-                padding: "4px 10px",
-                borderRadius: 20,
-                fontSize: 12,
-                marginRight: 8,
-              }}
-            >
-              {tag}
+    <div className="min-h-screen bg-white font-sans">
+      {/* NAVBAR */}
+      <nav className="sticky top-0 z-50 bg-white/90 backdrop-blur-md border-b border-gray-100">
+        <div className="max-w-[1400px] mx-auto px-6 h-14 flex items-center justify-between">
+          <Link href="/" className="flex items-center gap-2">
+            <span className="text-[26px] font-black tracking-tight text-gray-900 flex items-center group">
+              WORD<span className="text-indigo-600 ml-0.5">oo</span>
             </span>
+          </Link>
+          
+          <div className="relative flex-1 max-w-md mx-4">
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+              <input
+                type="text"
+                placeholder={`Search in ${blog.title}...`}
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+                className="w-full pl-10 pr-10 py-2 bg-gray-50 border border-gray-200 rounded-full text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              />
+              {query && (
+                <button onClick={clearSearch} className="absolute right-3 top-1/2 -translate-y-1/2">
+                  <X className="w-4 h-4 text-gray-400" />
+                </button>
+              )}
+            </div>
+            <SearchSuggestionsDropdown
+              visible={searchActive}
+              loading={searchLoading}
+              results={results}
+              query={query}
+              onSelect={(res) => router.push(`/posts/${res.data.slug}`)}
+            />
+          </div>
+          
+          <div className="hidden md:block">
+             <Link href="/auth/signup" className="text-sm font-bold text-indigo-600">Start Writing</Link>
+          </div>
+        </div>
+      </nav>
+
+      {/* HERO BANNER */}
+      <div className="relative w-full h-[320px] md:h-[450px] bg-gray-100 overflow-hidden">
+        <img
+          src={blog.coverImage || 'https://images.unsplash.com/photo-1499750310107-5fef28a66643?auto=format&fit=crop&w=1600&q=80'}
+          className="w-full h-full object-cover"
+          alt="Cover"
+        />
+        <div className="absolute inset-0 bg-black/10"></div>
+      </div>
+
+      <div className="max-w-7xl mx-auto px-6 md:px-12">
+        {/* PROFILE SECTION */}
+        <div className="relative flex flex-col md:flex-row items-start gap-8 pb-10 border-b border-gray-100">
+          <div className="relative -mt-24 z-20">
+            <div className="w-40 h-40 md:w-48 md:h-48 rounded-full bg-white p-1.5 shadow-2xl overflow-hidden">
+              <img
+                src={blog.profileImage || `https://ui-avatars.com/api/?name=${blog.title}&background=random`}
+                className="w-full h-full object-cover rounded-full"
+                alt="Profile"
+              />
+            </div>
+          </div>
+
+          <div className="flex-1 pt-6">
+            <div className="flex flex-col lg:flex-row lg:items-start justify-between gap-6">
+              <div className="max-w-3xl">
+                <h1 className="text-4xl font-black text-gray-900 tracking-tight flex items-center gap-3">
+                  {blog.title}
+                  <Check size={20} className="bg-blue-500 text-white rounded-full p-1" />
+                </h1>
+                <div className="flex items-center gap-4 mt-3 text-sm font-bold text-gray-400 uppercase tracking-widest">
+                  <span className="text-gray-900">@{blog.slug}</span>
+                  <span className="w-1 h-1 rounded-full bg-gray-300"></span>
+                  <span>{posts.length} Stories</span>
+                </div>
+                <p className="mt-5 text-gray-500 text-lg leading-relaxed font-light">
+                  {blog.description}
+                </p>
+              </div>
+
+              <div className="flex items-center gap-3 shrink-0">
+                <button className="bg-black text-white px-8 py-3.5 rounded-full font-bold text-sm hover:bg-zinc-800 transition-all shadow-lg flex items-center gap-2">
+                  <Bell size={18} /> Subscribe
+                </button>
+                <button className="p-3.5 rounded-full border border-gray-200 text-gray-500 hover:bg-gray-50 transition-colors">
+                  <Share2 size={20} />
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* TABS */}
+        <div className="flex items-center gap-10 border-b border-gray-100">
+          {['Home', 'About'].map((tab) => (
+            <button
+              key={tab}
+              onClick={() => setActiveTab(tab.toLowerCase() as any)}
+              className={`text-xs font-black py-6 border-b-2 transition-all tracking-[0.2em] uppercase ${
+                activeTab === tab.toLowerCase() ? 'border-black text-black' : 'border-transparent text-gray-300 hover:text-gray-500'
+              }`}
+            >
+              {tab}
+            </button>
           ))}
         </div>
-      )}
 
-      {/* Content */}
-      <article
-        style={{
-          fontSize: "1.1rem",
-          lineHeight: 1.7,
-          color: "#333",
-        }}
-        dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(blog.content || '') }}
-      />
-    </main>
+        {/* POSTS CONTENT */}
+        <div className="py-12">
+          {activeTab === 'home' ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10">
+              {posts.map((post: any) => (
+                <Link key={post._id} href={`/posts/${post.slug || post._id}`} className="group flex flex-col">
+                  <div className="relative aspect-[16/10] rounded-[2rem] overflow-hidden mb-5 bg-gray-50 shadow-sm group-hover:shadow-xl transition-all duration-500">
+                    <img
+                      src={post.thumbnail || 'https://via.placeholder.com/600x400?text=No+Thumbnail'}
+                      className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+                      alt={post.title}
+                    />
+                  </div>
+                  <div className="space-y-3 px-2">
+                    <div className="flex items-center gap-3 text-[9px] font-black uppercase tracking-widest text-gray-400">
+                      <span className="text-indigo-600">Published</span>
+                      <span className="w-1 h-1 rounded-full bg-gray-300"></span>
+                      <span>{format(new Date(post.createdAt), 'MMM d, yyyy')}</span>
+                    </div>
+                    <h4 className="text-xl font-bold text-gray-900 line-clamp-2 leading-snug group-hover:text-indigo-600 transition-colors">
+                      {post.title}
+                    </h4>
+                    <div className="flex items-center gap-4 pt-2 text-gray-400">
+                      <span className="flex items-center gap-1 text-xs font-bold"><Eye size={14} /> {post.views || 0}</span>
+                      <span className="flex items-center gap-1 text-xs font-bold"><Heart size={14} /> {post.likes || 0}</span>
+                    </div>
+                  </div>
+                </Link>
+              ))}
+            </div>
+          ) : (
+            <div className="max-w-2xl bg-gray-50 p-10 rounded-[3rem]">
+              <h3 className="text-2xl font-bold mb-4">About this blog</h3>
+              <p className="text-gray-600 leading-relaxed text-lg">
+                {blog.description || "This creator hasn't added an about section yet."}
+              </p>
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
   );
 }
-
-export const getServerSideProps: GetServerSideProps = async (context) => {
-  const slug = context.params?.slug as string;
-
-  try {
-    const blog = await getPublicBlogBySlug(slug);
-
-    return {
-      props: { blog },
-    };
-  } catch (error) {
-    return {
-      notFound: true,
-    };
-  }
-};

@@ -27,7 +27,7 @@ const PostThumbnail = ({ post, getImageUrl }: { post: any, getImageUrl: Function
 
   return (
     <div className="w-full h-full bg-gradient-to-br from-indigo-600 via-purple-600 to-pink-500 flex flex-col items-center justify-center p-6 text-center relative overflow-hidden">
-      <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 select-none pointer-events-none transition-transform duration-1000 group-hover/thumb:scale-110">        
+      <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 select-none pointer-events-none transition-transform duration-1000 group-hover/thumb:scale-110">
         {Array.from({ length: 6 }).map((_, i) => (
           <span
             key={i}
@@ -40,7 +40,7 @@ const PostThumbnail = ({ post, getImageUrl }: { post: any, getImageUrl: Function
           >
             WORDOO
           </span>
-        ))}      
+        ))}
       </div>
       <div className="relative z-10">
         <ImageIcon className="text-white/40 mb-3 mx-auto" size={32} />
@@ -57,7 +57,7 @@ export default function DashboardPage() {
   const router = useRouter();
   const queryClient = useQueryClient();
   const [token, setToken] = useState<string | null>(null);
-  
+
   // PAGINATION STATE
   const [page, setPage] = useState(1);
   const limit = 10;
@@ -250,7 +250,7 @@ const { data: postsData, isLoading: postsLoading, isFetching } = useQuery({
 
               {/* PAGINATION CONTROLS */}
               <div className="flex items-center justify-between pt-10 border-t border-gray-100">
-                <button 
+                <button
                   onClick={() => setPage(p => Math.max(p - 1, 1))}
                   disabled={page === 1}
                   className="flex items-center gap-2 px-5 py-2.5 rounded-xl border border-gray-200 text-sm font-bold text-gray-700 hover:bg-gray-50 disabled:opacity-30 disabled:cursor-not-allowed transition-all active:scale-95 shadow-sm"
@@ -264,7 +264,7 @@ const { data: postsData, isLoading: postsLoading, isFetching } = useQuery({
                   </span>
                 </div>
 
-                <button 
+                <button
                   onClick={() => setPage(p => p + 1)}
                   disabled={!hasMore}
                   className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-gray-900 text-white text-sm font-bold hover:bg-gray-800 disabled:opacity-30 disabled:cursor-not-allowed transition-all active:scale-95 shadow-sm"
