@@ -107,13 +107,16 @@ export async function getPublicPostDetail(slug: string): Promise<ApiResponse<Pos
 
 
 export async function getTenantPublicPosts(
-  options?: { page?: number; limit?: number }
+  options?: { page?: number; limit?: number; category?: string; } // Added category here
 ): Promise<ApiResponse<{ posts: Post[] }>> { 
   try {
     const params = new URLSearchParams();
     if (options?.page) params.append('page', options.page.toString());
     if (options?.limit) params.append('limit', options.limit.toString());
+    
+    if (options?.category) params.append('category', options.category);
 
+    
     const response = await api.get<ApiResponse<{ posts: Post[] }>>(
       `/public${params.toString() ? `?${params.toString()}` : ''}`
     );
@@ -129,7 +132,6 @@ export async function getTenantPublicPosts(
     };
   }
 }
-
 
 
 export async function createPost(

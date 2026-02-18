@@ -1,4 +1,4 @@
-import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { useQuery, useQueryClient, keepPreviousData } from '@tanstack/react-query';
 import { getToken } from '@/src/services/auth-storage';
 import { getMyBlog } from '@/src/services/blogs';
 import { getTenantPublicPosts } from '@/src/services/post';
@@ -57,47 +57,79 @@ export default function DashboardPage() {
   const router = useRouter();
   const queryClient = useQueryClient();
   const [token, setToken] = useState<string | null>(null);
+  const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
 
-  // PAGINATION STATE
   const [page, setPage] = useState(1);
   const limit = 10;
+
+  interface PostsResponse {
+  data: {
+    posts: Post[];
+  };
+}
 
   useEffect(() => {
     const t = getToken();
     setToken(t || null);
   }, []);
 
-  // Reset scroll on page change
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }, [page]);
 
-
-  const categories = [
-    { name: 'Fashion', image: 'https://images.unsplash.com/photo-1483985988355-763728e1935b?auto=format&fit=crop&w=100&q=80', color: 'bg-pink-50' },
-    { name: 'Food', image: 'https://images.unsplash.com/photo-1473093295043-cdd812d0e601?auto=format&fit=crop&w=100&q=80', color: 'bg-green-50' },
-    { name: 'Coding', image: 'https://images.unsplash.com/photo-1633356122544-f134324a6cee?auto=format&fit=crop&w=100&q=80', color: 'bg-purple-50' },
-    { name: 'Style', image: 'https://images.unsplash.com/photo-1490481651871-ab68de25d43d?auto=format&fit=crop&w=100&q=80', color: 'bg-blue-50' },
-    { name: 'Travel', image: 'https://images.unsplash.com/photo-1541849546-216549ae216d?auto=format&fit=crop&w=100&q=80', color: 'bg-rose-50' },
-    { name: 'Culture', image: 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&w=100&q=80', color: 'bg-orange-50' },
+const categories = [
+    { 
+      name: 'General', 
+      image: 'https://images.unsplash.com/photo-1457369804613-52c61a468e7d?auto=format&fit=crop&w=150&q=80', 
+      color: 'bg-slate-100 text-slate-700' 
+    },
+    { 
+      name: 'Technology', 
+      image: 'https://images.unsplash.com/photo-1518770660439-4636190af475?auto=format&fit=crop&w=150&q=80', 
+      color: 'bg-cyan-100 text-cyan-700' 
+    },
+    { 
+      name: 'Food', 
+      image: 'https://images.unsplash.com/photo-1504674900247-0877df9cc836?auto=format&fit=crop&w=150&q=80', 
+      color: 'bg-emerald-100 text-emerald-700' 
+    },
+    { 
+      name: 'Coding', 
+      image: 'https://images.unsplash.com/photo-1498050108023-c5249f4df085?auto=format&fit=crop&w=150&q=80', 
+      color: 'bg-violet-100 text-violet-700' 
+    },
+    { 
+      name: 'Lifestyle', 
+      image: 'https://images.unsplash.com/photo-1511707171634-5f897ff02aa9?auto=format&fit=crop&w=150&q=80', 
+      color: 'bg-sky-100 text-sky-700' 
+    },
+    { 
+      name: 'Travel', 
+      image: 'https://images.unsplash.com/photo-1476514525535-07fb3b4ae5f1?auto=format&fit=crop&w=150&q=80', 
+      color: 'bg-rose-100 text-rose-700' 
+    },
+    { 
+      name: 'Sports', 
+      image: 'https://images.unsplash.com/photo-1461896836934-ffe607ba8211?auto=format&fit=crop&w=150&q=80', 
+      color: 'bg-orange-100 text-orange-700' 
+    },
   ];
 
-  const { isLoading: myBlogLoading } = useQuery({
-    queryKey: ['my-blog'],
-    queryFn: () => getMyBlog(token as string),
-    enabled: !!token,
-  });
-// have to remove it causes re-rending all the time
-const { data: postsData, isLoading: postsLoading, isFetching } = useQuery({
-  queryKey: ['public-posts', page],
-  queryFn: () => getTenantPublicPosts({ limit: limit, page: page }),
-  refetchOnWindowFocus: false,  
-  staleTime: 5 * 60 * 1000,    
-  cacheTime: 10 * 60 * 1000,
-  keepPreviousData: true,   
-});
+const getActiveCategoryStyles = () => {
+    if (!selectedCategory) return 'border-gray-100';
+    const activeCat = categories.find(c => c.name.toLowerCase() === selectedCategory.toLowerCase());
+    const bgColor = activeCat?.color.split(' ')[0] || 'bg-gray-50';
+    return `${bgColor} border-transparent px-4 rounded-xl shadow-sm`;
+  };
 
-//
+  const { data: postsData, isLoading: postsLoading, isFetching } = useQuery({
+    queryKey: ['public-posts', page, selectedCategory],
+    queryFn: () => getTenantPublicPosts({ limit: limit, page: page, category: selectedCategory || undefined }),
+    refetchOnWindowFocus: false,
+    staleTime: 5 * 60 * 1000,
+    placeholderData: keepPreviousData,
+  });
+
   const posts: Post[] = postsData?.data?.posts || [];
   const hasMore = posts.length === limit;
 
@@ -108,13 +140,15 @@ const { data: postsData, isLoading: postsLoading, isFetching } = useQuery({
     return thumbnail.startsWith('/') ? `${apiUrl}${thumbnail}` : `${apiUrl}/${thumbnail}`;
   };
 
-  const getCategoryColor = (categories: string) => {
-    const t = categories?.toLowerCase();
-    if (t === 'coding') return 'bg-purple-100 text-purple-700';
-    if (t === 'style') return 'bg-blue-100 text-blue-700';
+const getCategoryColor = (catName: string) => {
+    const t = catName?.toLowerCase();
+    if (t === 'coding') return 'bg-violet-100 text-violet-700';
+    if (t === 'lifestyle') return 'bg-sky-100 text-sky-700';
     if (t === 'travel') return 'bg-rose-100 text-rose-700';
-    if (t === 'culture') return 'bg-orange-100 text-orange-700';
-    return 'bg-gray-100 text-gray-700';
+    if (t === 'technology') return 'bg-cyan-100 text-cyan-700';
+    if (t === 'food') return 'bg-emerald-100 text-emerald-700';
+    if (t === 'sports') return 'bg-orange-100 text-orange-700';
+    return 'bg-slate-100 text-slate-700';
   };
 
   if (postsLoading || isFetching) {
@@ -133,118 +167,135 @@ const { data: postsData, isLoading: postsLoading, isFetching } = useQuery({
   return (
     <DashboardLayout>
       <div className="max-w-7xl mx-auto space-y-12">
-        {/* Categories Section */}
-        <section className="w-full overflow-x-auto pb-4">
-          <div className="flex md:grid md:grid-cols-6 gap-5 min-w-max md:min-w-full">
-            {categories.map((cat) => (
-              <button key={cat.name} className={`flex items-center gap-3 p-3 rounded-xl transition-all hover:-translate-y-1 hover:shadow-md ${cat.color}`}>
-                <div className="w-10 h-10 rounded-full overflow-hidden shrink-0 border-2 border-white shadow-sm">
-                  <img src={cat.image} alt={cat.name} className="w-full h-full object-cover" />
-                </div>
-                <span className="font-semibold text-gray-800 text-sm">{cat.name}</span>
-              </button>
-            ))}
+        <section className="w-full">
+          <div className="flex overflow-x-auto gap-5 pb-4 scroll-smooth scrollbar-hide [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+            {categories.map((cat) => {
+              const isActive = selectedCategory?.toLowerCase() === cat.name.toLowerCase();
+              return (
+                <button
+                  key={cat.name}
+                  onClick={() => {
+                    setSelectedCategory(isActive ? null : cat.name);
+                    setPage(1);
+                  }}
+                  className={`flex items-center gap-3 p-3 rounded-xl transition-all hover:-translate-y-1 hover:shadow-md border-2 shrink-0 min-w-[150px] ${
+                    isActive
+                      ? 'border-indigo-500 bg-white shadow-lg ring-2 ring-indigo-50'
+                      : `border-transparent ${cat.color}`
+                  }`}
+                >
+                  <div className="w-10 h-10 rounded-full overflow-hidden shrink-0 border-2 border-white shadow-sm">
+                    <img src={cat.image} alt={cat.name} className="w-full h-full object-cover" />
+                  </div>
+                  <span className={`font-semibold text-sm ${isActive ? 'text-indigo-600' : 'text-gray-800'}`}>
+                    {cat.name}
+                  </span>
+                </button>
+              );
+            })}
           </div>
         </section>
 
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
           <div className="lg:col-span-8 space-y-12">
-            <div className="border-b border-gray-100 pb-4">
-              <h2 className="text-3xl font-bold text-gray-900">Recent Posts</h2>
+            {/* DYNAMIC HEADING CONTAINER */}
+            <div className={`pb-4 transition-all duration-300 border-b ${getActiveCategoryStyles()}`}>
+              <h2 className="text-3xl font-bold text-gray-900 py-2 capitalize">
+                {selectedCategory ? `${selectedCategory} Posts` : 'Recent Posts'}
+              </h2>
             </div>
 
             <div className="space-y-16">
               {posts.length > 0 ? (
-                posts.map((post: any) => {
+                posts.map((post: any) => (
+                  <article key={post._id} className="flex flex-col md:flex-row gap-8 group border-b border-gray-100 pb-6 md:border-none md:pb-0">
+                    <Link
+                      href={`/posts/${post.slug || post._id}`}
+                      className="w-full md:w-[45%] aspect-[16/10] md:rounded-2xl md:overflow-hidden md:shadow-sm shrink-0 bg-gray-100"
+                    >
+                      <PostThumbnail post={post} getImageUrl={getImageUrl} />
+                    </Link>
 
-                  return (
-                    <article key={post._id} className="flex flex-col md:flex-row gap-8 group border-b border-gray-100 pb-6 md:border-none md:pb-0">
-                      <Link
-                        href={`${post.slug || post._id}`}
-                        className="w-full md:w-[45%] aspect-[16/10] md:rounded-2xl md:overflow-hidden md:shadow-sm shrink-0 bg-gray-100"
-                      >
-                        <PostThumbnail post={post} getImageUrl={getImageUrl} />
-                      </Link>
+                    <div className="flex-1 py-1 flex flex-col justify-between">
+                      <div>
+                        <div className="flex items-center gap-2 flex-wrap mb-4">
+                          {post.categories?.slice(0, 3).map((catName: string, index: number) => (
+                            <span
+                              key={index}
+                              className={`px-2.5 py-0.5 rounded-full text-xs font-semibold ${getCategoryColor(catName)}`}
+                            >
+                              {catName}
+                            </span>
+                          ))}
+                          <span className="text-xs text-gray-500">
+                            {new Date(post.createdAt).toLocaleDateString('en-US', {
+                              month: 'short',
+                              day: 'numeric',
+                              year: 'numeric'
+                            })}
+                          </span>
+                        </div>
 
-                      <div className="flex-1 py-1 flex flex-col justify-between">
-                        <div>
-                          <div className="flex items-center gap-2 flex-wrap mb-4">
-                            {post.categories?.slice(0, 3).map((categories: string, index: number) => (
-                              <span
-                                key={index}
-                                className={`px-2.5 py-0.5 rounded-full text-xs font-semibold ${getCategoryColor(categories)}`}
-                              >
-                                {categories}
-                              </span>
-                            ))}
-                            <span className="text-xs text-gray-500">
-                              {new Date(post.createdAt).toLocaleDateString('en-US', {
-                                month: 'short',
-                                day: 'numeric',
-                                year: 'numeric'
-                              })}
+                        <Link href={`/posts/${post.slug || post._id}`}>
+                          <h3 className="text-2xl font-bold text-gray-900 mb-3 leading-tight md:group-hover:text-indigo-600 transition-colors">
+                            {post.title}
+                          </h3>
+                        </Link>
+
+                        <p className="text-gray-600 mb-4 line-clamp-3 leading-relaxed">
+                          {post.excerpt || (post.content ? post.content.substring(0, 200) + '...' : '')}
+                        </p>
+                      </div>
+
+                      <div className="flex flex-wrap items-center justify-between gap-4 pt-4 border-t border-gray-100">
+                        <div className="flex items-center gap-2">
+                          <div className="w-8 h-8 rounded-full bg-indigo-500 flex items-center justify-center text-[10px] font-bold text-white overflow-hidden shrink-0">
+                            {post.blog?.profileImage ? (
+                              <img src={post.blog.profileImage} alt="" className="w-full h-full object-cover" />
+                            ) : (
+                              <span>{(post.blog?.authorName || "U").charAt(0)}</span>
+                            )}
+                          </div>
+                          <div className="flex flex-col">
+                            <Link
+                              href={`/blogs/${post.blog?.slug || 'no-slug-found'}`}
+                              className="text-sm font-bold text-gray-900 hover:text-indigo-600 transition-colors leading-none"
+                            >
+                              {post.blog?.title || 'Untitled Blog'}
+                            </Link>
+                            <span className="text-[10px] text-gray-500 font-medium mt-1">
+                              by {post.blog?.authorName || post.blog?.name || `Anonymous`}
                             </span>
                           </div>
+                        </div>
 
-                          <Link href={`/posts/${post.slug || post._id}`}>
-  <h3 className="text-2xl font-bold text-gray-900 mb-3 leading-tight md:group-hover:text-indigo-600 transition-colors">
-    {post.title}
-  </h3>
-</Link>
-                          
-<p className="text-gray-600 mb-4 line-clamp-3 leading-relaxed">
-  {post.excerpt || (post.content ? post.content.substring(0, 200) + '...' : '')}
-</p>
-</div>
-
-<div className="flex flex-wrap items-center justify-between gap-4 pt-4 border-t border-gray-100">
-  <div className="flex items-center gap-2">
-    <div className="w-8 h-8 rounded-full bg-indigo-500 flex items-center justify-center text-[10px] font-bold text-white overflow-hidden shrink-0">
-      {post.blog?.profileImage ? (
-        <img src={post.blog.profileImage} alt="" className="w-full h-full object-cover" />
-      ) : (
-        <span>{(post.blog?.authorName || "U").charAt(0)}</span>
-      )}
-    </div>
-    
-    <div className="flex flex-col">
-    
-      
-      <Link 
-        href={`/blogs/${post.blog?.slug || 'no-slug-found'}`}
-        className="text-sm font-bold text-gray-900 hover:text-indigo-600 transition-colors leading-none"
-      >
-        {post.blog?.title || 'Untitled Blog'}
-      </Link>
-      <span className="text-[10px] text-gray-500 font-medium mt-1">
-        by {post.blog?.authorName || post.blog?.name || `Anonymous`}
-      </span>
-    </div>
-  </div>
-
-                          <div className="flex items-center gap-4">
-                            <div className="flex items-center gap-1.5" title="Likes">
-                              <Heart size={16} fill={post.likes > 0 ? "currentColor" : "none"} className={post.likes > 0 ? "text-red-500" : "text-gray-400"} />
-                              <span className="text-xs font-medium">{post.likes || 0}</span>
-                            </div>
-                            <div className="flex items-center gap-1.5" title="Comments">
-                              <MessageSquare size={16} className="text-gray-400" />
-                              <span className="text-xs font-medium">{post.commentsCount || 0}</span>
-                            </div>
-                            <span className="text-gray-300 hidden md:inline">|</span>
-                            <Link href={`/posts/${post.slug || post._id}`} className="text-sm font-semibold text-gray-900 md:hover:text-indigo-600 transition-colors">
-                              Read Article
-                            </Link>
+                        <div className="flex items-center gap-4">
+                          <div className="flex items-center gap-1.5">
+                            <Heart size={16} fill={post.likes > 0 ? "currentColor" : "none"} className={post.likes > 0 ? "text-red-500" : "text-gray-400"} />
+                            <span className="text-xs font-medium">{post.likes || 0}</span>
                           </div>
+                          <div className="flex items-center gap-1.5">
+                            <MessageSquare size={16} className="text-gray-400" />
+                            <span className="text-xs font-medium">{post.commentsCount || 0}</span>
+                          </div>
+                          <span className="text-gray-300 hidden md:inline">|</span>
+                          <Link href={`/posts/${post.slug || post._id}`} className="text-sm font-semibold text-gray-900 md:hover:text-indigo-600 transition-colors">
+                            Read Article
+                          </Link>
                         </div>
                       </div>
-                    </article>
-                  );
-                })
+                    </div>
+                  </article>
+                ))
               ) : (
                 <div className="text-center py-20 bg-gray-50 rounded-2xl border-2 border-dashed border-gray-200">
-                  <p className="text-gray-400 font-medium">No posts found on this page.</p>
-                  <button onClick={() => setPage(1)} className="mt-4 text-indigo-600 font-bold text-sm">Return to first page</button>
+                  <p className="text-gray-400 font-medium">No posts found for this category.</p>
+                  <button 
+                    onClick={() => {setSelectedCategory(null); setPage(1);}} 
+                    className="mt-4 text-indigo-600 font-bold text-sm hover:underline"
+                  >
+                    Clear filter and see all posts
+                  </button>
                 </div>
               )}
 
@@ -275,7 +326,6 @@ const { data: postsData, isLoading: postsLoading, isFetching } = useQuery({
             </div>
           </div>
 
-          {/* Sidebar */}
           <div className="lg:col-span-4 space-y-12">
             <div className="sticky top-6 space-y-12">
               <PopularSidebar />

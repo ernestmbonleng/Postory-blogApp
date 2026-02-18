@@ -171,7 +171,6 @@ const CreatePostForm: React.FC<CreatePostFormProps> = ({
     }
   };
 
-  //
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const selectedFile = e.target.files?.[0];
     if (selectedFile) {
@@ -190,8 +189,6 @@ const CreatePostForm: React.FC<CreatePostFormProps> = ({
           }
         }
       };
-      
-
       reader.onerror = () => {
         alert('Failed to read the selected file. Please try again.');
         console.error('FileReader error:', reader.error);
@@ -201,7 +198,7 @@ const CreatePostForm: React.FC<CreatePostFormProps> = ({
       setFile(selectedFile);
     }
   };
-//
+
   const handleSubmit = async (publishStatus: 'draft' | 'published') => {
     if (!token) return alert('Please log in');
     const latestContent = editor?.getHTML() || "";
@@ -235,9 +232,14 @@ const CreatePostForm: React.FC<CreatePostFormProps> = ({
         finalPublicId = uploadData.data.publicId;
       }
 
+      const categoriesToSave = (formData.categories && formData.categories.length > 0) 
+    ? formData.categories 
+    : ["General"];
+
       const payload: CreatePostDto = { 
         ...formData, 
-        status: publishStatus, 
+        status: publishStatus,
+        categories: categoriesToSave,
         content: latestContent, 
         thumbnail: finalThumbnail, 
         thumbnailPublicId: finalPublicId,

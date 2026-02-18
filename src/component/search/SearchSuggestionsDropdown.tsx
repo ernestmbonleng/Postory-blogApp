@@ -1,21 +1,19 @@
-// SearchSuggestionsDropdown.tsx - FIXED VERSION
 import { SearchType } from '@/src/services/search';
 import { User, FileText, Tag, Folder } from 'lucide-react';
 import React from 'react';
 
-// Define a proper interface for the data
 interface SearchResultData {
   username?: string;
   slug?: string;
   id?: string;
-  [key: string]: unknown; // Allow other properties
+  [key: string]: unknown; 
 }
 
 interface SearchResult {
   type: SearchType;
   text: string;
   score: number;
-  data: SearchResultData; // Use the proper interface
+  data: SearchResultData; 
 }
 
 interface Props {

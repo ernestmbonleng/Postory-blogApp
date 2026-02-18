@@ -28,12 +28,12 @@ export default function Register() {
   const mutation = useMutation({
     mutationFn: registerUser,
     onSuccess: (data) => {
-      auth.login(data.accessToken, data.user.username);
+      auth.login(data.accessToken);
       router.push('/dashboard');
     },
   });
 
-  // Stricter validation logic
+
   const validateEmail = (email: string) => {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(email)) return "Please enter a valid email address.";

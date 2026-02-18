@@ -1,31 +1,78 @@
 import { useRouter } from 'next/router';
 import { useQuery } from '@tanstack/react-query';
 import { useState } from 'react';
-import { getPublicBlogBySlug } from '@/src/services/blogs'; // Ensure this is your public service
+import { getPublicBlogBySlug } from '@/src/services/blogs';
 import Link from 'next/link';
 import { 
-  Bell, Check, Share2, Heart, Eye, Search, X, MessageSquare 
+  Bell, Check, Share2, Heart, MessageSquare, Search, X, ImageIcon 
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { useDashboardSearch } from '@/src/component/search/DashboardSearchShadow';
 import { SearchSuggestionsDropdown } from '@/src/component/search/SearchSuggestionsDropdown';
 
+// --- HELPERS ---
+const getImageUrl = (thumbnail: string | undefined): string => {
+  if (!thumbnail || thumbnail.trim() === '') return 'https://via.placeholder.com/400x250?text=placeholder';
+  if (thumbnail.startsWith('http')) return thumbnail;
+  const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000';
+  return thumbnail.startsWith('/') ? `${apiUrl}${thumbnail}` : `${apiUrl}/${thumbnail}`;
+};
+
+// --- BRANDED THUMBNAIL COMPONENT ---
+const PostThumbnail = ({ post }: { post: any }) => {
+  const imageUrl = getImageUrl(post.thumbnail);
+  const isPlaceholder = imageUrl.includes('placeholder.com');
+
+  if (!isPlaceholder) {
+    return (
+      <img
+        src={imageUrl}
+        alt={post.title}
+        className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+      />
+    );
+  }
+
+  return (
+    <div className="w-full h-full bg-gradient-to-br from-indigo-600 via-purple-600 to-pink-500 flex flex-col items-center justify-center p-6 text-center relative overflow-hidden">
+      <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 select-none pointer-events-none transition-transform duration-1000 group-hover:scale-110">
+        {Array.from({ length: 6 }).map((_, i) => (
+          <span
+            key={i}
+            className="text-4xl md:text-5xl font-black tracking-tighter opacity-30 leading-none"
+            style={{
+              color: 'transparent',
+              WebkitTextStroke: '1px rgba(255,255,255,0.8)',
+              fontFamily: 'system-ui, sans-serif'
+            }}
+          >
+            WORDOO
+          </span>
+        ))}
+      </div>
+      <div className="relative z-10">
+        <ImageIcon className="text-white/40 mb-3 mx-auto" size={24} />
+        <h4 className="text-white text-sm md:text-base font-bold leading-tight line-clamp-3 px-2">
+          {post.title}
+        </h4>
+        <div className="mt-4 w-10 h-1 bg-white/30 mx-auto rounded-full" />
+      </div>
+    </div>
+  );
+};
+
 export default function PublicBlogChannelView() {
   const router = useRouter();
-  const { slug } = router.query; // Grabs the slug from the URL: /blogs/[slug]
-  
+  const { slug } = router.query;
   const [activeTab, setActiveTab] = useState<'home' | 'about'>('home');
 
-  // 1. FETCH BLOG DATA (Client-side)
-  // This replaces getServerSideProps
   const { data: blog, isLoading: blogLoading, error } = useQuery({
     queryKey: ['public-blog', slug],
     queryFn: () => getPublicBlogBySlug(slug as string),
-    enabled: !!slug, // Only run when the slug is available in the URL
+    enabled: !!slug,
     retry: false,
   });
 
-  // 2. SEARCH HOOK
   const {
     query,
     setQuery,
@@ -35,7 +82,6 @@ export default function PublicBlogChannelView() {
     clearSearch,
   } = useDashboardSearch();
 
-  // Loading State
   if (blogLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-white">
@@ -44,57 +90,48 @@ export default function PublicBlogChannelView() {
     );
   }
 
-  // Error State (e.g., Blog not found)
   if (error || !blog) {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center bg-white p-6 text-center">
         <h2 className="text-2xl font-bold text-gray-900">Blog Not Found</h2>
-        <p className="text-gray-500 mt-2">The blog you are looking for doesn't exist or has been moved.</p>
+        <p className="text-gray-500 mt-2">The blog you are looking for doesn't exist.</p>
         <Link href="/" className="mt-6 text-indigo-600 font-bold hover:underline">Back to Home</Link>
       </div>
     );
   }
 
-  const posts = blog.posts || [];
-
+const posts = (blog as any).posts || [];
   return (
     <div className="min-h-screen bg-white font-sans">
       {/* NAVBAR */}
       <nav className="sticky top-0 z-50 bg-white/90 backdrop-blur-md border-b border-gray-100">
         <div className="max-w-[1400px] mx-auto px-6 h-14 flex items-center justify-between">
-          <Link href="/" className="flex items-center gap-2">
+          <Link href="/dashboard" className="flex items-center gap-2">
             <span className="text-[26px] font-black tracking-tight text-gray-900 flex items-center group">
-              WORD<span className="text-indigo-600 ml-0.5">oo</span>
+              WORD<span className="relative flex items-center text-indigo-600 ml-0.5">oo</span>
             </span>
           </Link>
           
-          <div className="relative flex-1 max-w-md mx-4">
+          <div className="relative flex-1 max-w-md">
             <div className="relative">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
               <input
                 type="text"
-                placeholder={`Search in ${blog.title}...`}
+                placeholder="Search stories..."
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
-                className="w-full pl-10 pr-10 py-2 bg-gray-50 border border-gray-200 rounded-full text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                className="w-full pl-10 pr-10 py-2 bg-gray-50 border border-gray-200 rounded-full text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
               />
               {query && (
-                <button onClick={clearSearch} className="absolute right-3 top-1/2 -translate-y-1/2">
-                  <X className="w-4 h-4 text-gray-400" />
+                <button onClick={clearSearch} className="absolute right-3 top-1/2 transform -translate-y-1/2">
+                  <X className="w-4 h-4 text-gray-400 hover:text-gray-600" />
                 </button>
               )}
             </div>
-            <SearchSuggestionsDropdown
-              visible={searchActive}
-              loading={searchLoading}
-              results={results}
-              query={query}
-              onSelect={(res) => router.push(`/posts/${res.data.slug}`)}
-            />
           </div>
           
-          <div className="hidden md:block">
-             <Link href="/auth/signup" className="text-sm font-bold text-indigo-600">Start Writing</Link>
+          <div className="flex items-center gap-3">
+             <div className="w-8 h-8 rounded-full bg-gray-200 border border-gray-100 overflow-hidden"></div>
           </div>
         </div>
       </nav>
@@ -173,15 +210,12 @@ export default function PublicBlogChannelView() {
               {posts.map((post: any) => (
                 <Link key={post._id} href={`/posts/${post.slug || post._id}`} className="group flex flex-col">
                   <div className="relative aspect-[16/10] rounded-[2rem] overflow-hidden mb-5 bg-gray-50 shadow-sm group-hover:shadow-xl transition-all duration-500">
-                    <img
-                      src={post.thumbnail || 'https://via.placeholder.com/600x400?text=No+Thumbnail'}
-                      className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
-                      alt={post.title}
-                    />
+                    {/* --- INTEGRATED BRANDED THUMBNAIL --- */}
+                    <PostThumbnail post={post} />
                   </div>
                   <div className="space-y-3 px-2">
                     <div className="flex items-center gap-3 text-[9px] font-black uppercase tracking-widest text-gray-400">
-                      <span className="text-indigo-600">Published</span>
+                      <span className="text-indigo-600 font-black">Published</span>
                       <span className="w-1 h-1 rounded-full bg-gray-300"></span>
                       <span>{format(new Date(post.createdAt), 'MMM d, yyyy')}</span>
                     </div>
@@ -189,7 +223,7 @@ export default function PublicBlogChannelView() {
                       {post.title}
                     </h4>
                     <div className="flex items-center gap-4 pt-2 text-gray-400">
-                      <span className="flex items-center gap-1 text-xs font-bold"><Eye size={14} /> {post.views || 0}</span>
+                      <span className="flex items-center gap-1 text-xs font-bold"><MessageSquare size={14} /> {post.views || 0}</span>
                       <span className="flex items-center gap-1 text-xs font-bold"><Heart size={14} /> {post.likes || 0}</span>
                     </div>
                   </div>

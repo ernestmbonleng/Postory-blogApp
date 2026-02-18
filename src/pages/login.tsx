@@ -22,10 +22,9 @@ export default function Login() {
   const mutation = useMutation({
     mutationFn: loginApi,
     onSuccess: (data) => {
-      auth.login(data.accessToken, data.userName || 'User'); 
+      auth.login(data.accessToken);
       router.push('/dashboard');
     },
-    // Removed alert() to match professional feedback
   });
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -35,7 +34,6 @@ export default function Login() {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50 font-sans relative overflow-hidden">
-        {/* Blobs Maintained */}
         <div className="absolute top-0 -left-4 w-72 h-72 bg-purple-500 rounded-full mix-blend-multiply filter blur-xl opacity-20 animate-blob" />
         <div className="absolute top-0 -right-4 w-72 h-72 bg-yellow-500 rounded-full mix-blend-multiply filter blur-xl opacity-20 animate-blob animation-delay-2000" />
         <div className="absolute -bottom-8 left-20 w-72 h-72 bg-pink-500 rounded-full mix-blend-multiply filter blur-xl opacity-20 animate-blob animation-delay-4000" />

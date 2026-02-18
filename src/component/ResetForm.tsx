@@ -1,3 +1,5 @@
+import React, { useState } from 'react';
+
 const ResetPasswordForm = () => {
   const [formData, setFormData] = useState({ token: '', newPassword: '', confirm: '' });
   const [loading, setLoading] = useState(false);

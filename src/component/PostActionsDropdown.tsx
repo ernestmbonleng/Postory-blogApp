@@ -10,8 +10,8 @@ interface PostActionsDropdownProps {
   onDownload?: () => void;
   onCopyLink: (postId: string, slug?: string, title?: string) => void;
   currentStatus?: 'published' | 'draft';
-  slug?: string;      // ✅ ADDED
-  title?: string;     // ✅ ADDED
+  slug?: string;     
+  title?: string;    
 }
 
 export default function PostActionsDropdown({
@@ -21,15 +21,15 @@ export default function PostActionsDropdown({
   onDelete,
   onToggleVisibility,
   onDownload,
-  onCopyLink,        // ✅ ADDED
+  onCopyLink,        
   currentStatus = 'published',
-  slug,              // ✅ ADDED
-  title              // ✅ ADDED
+  slug,            
+  title             
 }: PostActionsDropdownProps) {
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
-  // Close dropdown when clicking outside
+
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
@@ -41,14 +41,14 @@ export default function PostActionsDropdown({
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  // Only show dropdown if user is the owner
+ 
   if (!isOwner) {
     return null;
   }
 
   return (
     <div className="relative" ref={dropdownRef}>
-      {/* Three-dot button */}
+
       <button
         onClick={() => setIsOpen(!isOpen)}
         className="p-1.5 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
@@ -60,7 +60,6 @@ export default function PostActionsDropdown({
       {isOpen && (
         <div className="absolute right-0 mt-2 w-48 bg-white dark:bg-gray-900 rounded-lg shadow-lg border border-gray-200 dark:border-gray-800 z-50 py-1">
           
-          {/* ✅ COPY LINK BUTTON - ADDED AT THE TOP */}
           <button
             onClick={() => {
               onCopyLink(postId, slug, title);
@@ -118,7 +117,6 @@ export default function PostActionsDropdown({
             </button>
           )}
 
-          {/* Delete Option (with warning style) */}
           <button
             onClick={() => {
               onDelete();

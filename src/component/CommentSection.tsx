@@ -4,12 +4,13 @@ import { commentService } from '@/src/services/comment';
 import { Comment } from '@/src/types/comment';
 import { User, Heart } from 'lucide-react';
 import { format } from 'date-fns';
-import { useAuth } from '@/src/hooks/useAuth'; // Import your hook
+import { useAuth } from '@/src/hooks/useAuth'; 
+
 
 export default function CommentSection({ postId, token }: { postId: string, token: string | null }) {
   const [comments, setComments] = useState<Comment[]>([]);
   const [text, setText] = useState('');
-  const { openAuthModal } = useAuth(); // Extract the modal trigger
+  const { openAuthModal } = useAuth(); 
 
   useEffect(() => {
     const fetchComments = async () => {
@@ -26,10 +27,11 @@ export default function CommentSection({ postId, token }: { postId: string, toke
 
   const handlePost = async () => {
     if (!text.trim() || !token) {
-      openAuthModal(); // Double-check protection
+      openAuthModal();
       return;
     }
     try {
+
       const newComment = await commentService.addComment(postId, text);
       setComments([newComment, ...comments]); 
       setText('');
@@ -47,7 +49,6 @@ export default function CommentSection({ postId, token }: { postId: string, toke
       </div>
 
       {token ? (
-        /* Authenticated: Show the editor */
         <div className="flex gap-4 items-start bg-white p-4 rounded-xl border border-gray-100 shadow-sm focus-within:shadow-md transition-all">
            <div className="w-10 h-10 rounded-full bg-zinc-100 flex items-center justify-center text-zinc-600 shrink-0 font-bold">
             <User size={18} strokeWidth={1.5} />
@@ -72,7 +73,6 @@ export default function CommentSection({ postId, token }: { postId: string, toke
           </div>
         </div>
       ) : (
-        /* Guest: Show a clean prompt that triggers the Modal */
         <div 
           onClick={openAuthModal}
           className="flex gap-4 items-center bg-zinc-50 p-6 rounded-xl border border-zinc-100 cursor-pointer hover:bg-zinc-100/50 transition-colors group"

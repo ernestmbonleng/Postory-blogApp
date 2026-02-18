@@ -39,7 +39,7 @@ export interface CreatePostDto {
   slug?: string;
   status: 'draft' | 'published';
   thumbnail?: string;
-  tags?: string[];
+  categories?: string[];
   excerpt?: string;
   seoDescription?: string;
   thumbnailPublicId?: string;

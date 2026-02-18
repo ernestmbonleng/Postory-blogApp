@@ -1,4 +1,3 @@
-// DashboardSearchController.tsx - SIMPLIFIED VERSION
 import { useState, useEffect } from 'react';
 import { useSearchSuggestions } from '../../hooks/useSearchSuggestions'; // Import this
 
@@ -6,14 +5,12 @@ export function useDashboardSearch() {
   const [query, setQuery] = useState('');
   const [isActive, setIsActive] = useState(false);
 
-  // Use the React Query hook
   const { 
     data: searchData, 
     isLoading, 
     error 
   } = useSearchSuggestions(query, 5);
 
-  // Extract results from searchData
   const results = searchData?.suggestions || [];
 
   useEffect(() => {

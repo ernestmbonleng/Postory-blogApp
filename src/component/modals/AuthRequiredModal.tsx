@@ -1,4 +1,3 @@
-// src/component/modals/AuthRequiredModal.tsx
 import { Button } from "../ui/button";
 import { X } from "lucide-react";
 import Link from "next/link";

@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useState } from 'react';
+import { createContext, useContext, useEffect, useState, useCallback } from 'react';
 import { getToken, setToken as setCookieToken, clearToken } from '../services/auth-storage';
 import AuthRequiredModal from '../component/modals/AuthRequiredModal';
 import { jwtDecode } from 'jwt-decode';
@@ -6,15 +6,15 @@ import { jwtDecode } from 'jwt-decode';
 interface AuthContextType {
   token: string | null;
   userName: string | null;
-  userId: string | null;        // ← ADD THIS
-  email: string | null;         // ← ADD THIS
-  role: string | null;          // ← ADD THIS
-  hasBlog: boolean;            // ← ADD THIS
-  tenantId: string | null;     // ← ADD THIS
+  userId: string | null;       
+  email: string | null;         
+  role: string | null;         
+  hasBlog: boolean;           
+  tenantId: string | null;    
   isAuthModalOpen: boolean;
   openAuthModal: () => void;
   closeAuthModal: () => void;
-  login: (token: string) => void; // ← CHANGED - only need token now!
+  login: (token: string) => void;
   logout: () => void;
 }
 
@@ -31,20 +31,42 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [loading, setLoading] = useState(true);
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
 
-  // ✅ FIXED: Decode token to get user data!
-  const decodeAndSetUser = (token: string) => {
+  // --- 1. Define Logout First ---
+  // We use useCallback so it can be safely called inside decodeAndSetUser
+  const logout = useCallback(() => {
+    clearToken();
+    localStorage.removeItem('userData');
+    localStorage.removeItem('userName'); 
+    localStorage.removeItem('user');      
+    setToken(null);
+    setUserName(null);
+    setUserId(null);
+    setEmail(null);
+    setRole(null);
+    setHasBlog(false);
+    setTenantId(null);
+  }, []);
+
+  // --- 2. Define Decode logic ---
+  const decodeAndSetUser = useCallback((token: string) => {
     try {
       const decoded: any = jwtDecode(token);
-      console.log('✅ Decoded token:', decoded);
       
+      // Check if token is expired
+      const currentTime = Date.now() / 1000;
+      if (decoded.exp && decoded.exp < currentTime) {
+        console.warn('Token expired. Logging out.');
+        logout();
+        return;
+      }
+
       setUserName(decoded.username || decoded.userId || null);
       setUserId(decoded.userId || decoded.sub || null);
       setEmail(decoded.email || null);
       setRole(decoded.role || null);
       setHasBlog(decoded.hasBlog || false);
       setTenantId(decoded.tenantId || null);
-      
-      // ✅ Also store in localStorage for persistence
+
       localStorage.setItem('userData', JSON.stringify({
         userName: decoded.username,
         userId: decoded.userId,
@@ -54,10 +76,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         tenantId: decoded.tenantId
       }));
     } catch (error) {
-      console.error('❌ Failed to decode token:', error);
+      console.error('Failed to decode token:', error);
+      logout(); // Wipe state if token is malformed
     }
-  };
+  }, [logout]);
 
+  // --- 3. Run Initial Auth Check ---
   useEffect(() => {
     const storedToken = getToken();
     
@@ -65,30 +89,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setToken(storedToken);
       decodeAndSetUser(storedToken);
     } else {
-      // Try to restore from localStorage
-      const storedUserData = localStorage.getItem('userData');
-      if (storedUserData) {
-        try {
-          const userData = JSON.parse(storedUserData);
-          setUserName(userData.userName);
-          setUserId(userData.userId);
-          setEmail(userData.email);
-          setRole(userData.role);
-          setHasBlog(userData.hasBlog);
-          setTenantId(userData.tenantId);
-        } catch (e) {
-          console.error('Failed to restore user data:', e);
-        }
-      }
+      // No token found? Wipe everything. 
+      // This prevents "Ghost Data" from previous users.
+      logout();
     }
     
     setLoading(false);
-  }, []);
+  }, [decodeAndSetUser, logout]);
 
+  // --- 4. Helper Functions ---
   const openAuthModal = () => setIsAuthModalOpen(true);
   const closeAuthModal = () => setIsAuthModalOpen(false);
 
-  // ✅ FIXED: Login now only needs token!
   const login = (newToken: string) => {
     setCookieToken(newToken);
     setToken(newToken);
@@ -96,29 +108,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setIsAuthModalOpen(false);
   };
 
-  const logout = () => {
-    clearToken();
-    localStorage.removeItem('userData'); // ← Clean up
-    localStorage.removeItem('userName');  // ← Remove old
-    localStorage.removeItem('user');       // ← Remove old
-    setToken(null);
-    setUserName(null);
-    setUserId(null);
-    setEmail(null);
-    setRole(null);
-    setHasBlog(false);
-    setTenantId(null);
-  };
-
   return (
     <AuthContext.Provider value={{
       token,
       userName,
-      userId,           // ← Now available!
-      email,           // ← Now available!
-      role,           // ← Now available!
-      hasBlog,        // ← Now available!
-      tenantId,       // ← Now available!
+      userId,         
+      email,          
+      role,          
+      hasBlog,       
+      tenantId,    
       isAuthModalOpen,
       openAuthModal,
       closeAuthModal,

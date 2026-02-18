@@ -90,3 +90,9 @@ export async function updateMyBlogImages(
 
   return response.json();
 }
+
+export async function getBlogByUserId(userId: string): Promise<Blog> {
+  const res = await fetch(`${API_URL}/blogs/user/${userId}`);
+  if (!res.ok) throw new Error('Blog not found');
+  return res.json();
+}

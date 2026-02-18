@@ -43,8 +43,8 @@ const PopularSidebar: React.FC = () => {
         {popular.slice(0, 4).map((post, index) => (
           <div key={post._id} className="group">
             <div className="mb-2">
-              <span className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider ${getCategoryColor(post.tags?.[0] || 'General')}`}>
-                {post.tags?.[0] || 'General'}
+              <span className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider ${getCategoryColor(post.categories?.[0] || 'General')}`}>
+                {post.categories?.[0] || 'General'}
               </span>
             </div>
             

@@ -94,7 +94,6 @@ const ResetPasswordForm = () => {
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-6">
-          {/* ✅ FIXED: Added value binding + outline-hidden */}
           <div>
             <label className="block text-sm font-bold text-gray-700 mb-2">Reset Token</label>
             <input
@@ -105,11 +104,9 @@ const ResetPasswordForm = () => {
               placeholder="Enter the 6-digit code"
               required
               className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:bg-white outline-hidden transition-all text-gray-900"
-              // ✅ outline-none → outline-hidden ⬆️
             />
           </div>
 
-          {/* ✅ FIXED: Added value binding + outline-hidden */}
           <div>
             <label className="block text-sm font-bold text-gray-700 mb-2">New Password</label>
             <input
