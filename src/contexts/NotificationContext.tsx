@@ -1,7 +1,8 @@
-import React, { createContext, useContext, useEffect, useState } from 'react';
+import React, { createContext, useContext, useEffect, useState, useCallback } from 'react';
 import { useNotificationSocket } from '@/src/hooks/useNotificationSocket';
 import { notificationService } from '@/src/services/notification.service';
 import { AppNotification } from '@/src/types/notification';
+import { useAuth } from '@/src/hooks/useAuth'; 
 
 interface NotificationContextType {
   notifications: AppNotification[];
@@ -21,33 +22,61 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
   
   const { notifications: socketNotifications, setNotifications: setSocketNotifications } = 
     useNotificationSocket();
+  
+    const { token } = useAuth();
+    const isAuthenticated = !!token; 
 
-  const loadNotifications = async () => {
+  // ✅ Use useCallback to memoize the function
+  const loadNotifications = useCallback(async () => {
+    // If not authenticated, clear notifications and return
+    if (!isAuthenticated || !token) {
+      setNotifications([]);
+      setUnreadCount(0);
+      setIsLoading(false);
+      return;
+    }
+
     try {
       setIsLoading(true);
       const [notifData, countData] = await Promise.all([
         notificationService.getNotifications(1, 20),
         notificationService.getUnreadCount(),
       ]);
-      setNotifications(notifData.notifications);
-      setUnreadCount(countData.unreadCount);
+      setNotifications(notifData.notifications || []);
+      setUnreadCount(countData.unreadCount || 0);
     } catch (error) {
       console.error('Failed to load notifications:', error);
+      // Don't throw - just set empty state
+      setNotifications([]);
+      setUnreadCount(0);
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [isAuthenticated, token]); // ✅ Dependencies
+
+  // ✅ Load notifications when auth state changes
+  useEffect(() => {
+    loadNotifications();
+  }, [loadNotifications]); // ✅ Run when loadNotifications changes
 
   // Handle real-time notifications
   useEffect(() => {
-    if (socketNotifications.length > 0) {
-      setNotifications(prev => [...socketNotifications, ...prev]);
-      setUnreadCount(prev => prev + 1);
+    if (socketNotifications.length > 0 && isAuthenticated) {
+      setNotifications(prev => {
+        // Avoid duplicates
+        const newNotifs = socketNotifications.filter(
+          newNotif => !prev.some(existing => existing._id === newNotif._id)
+        );
+        return [...newNotifs, ...prev];
+      });
+      setUnreadCount(prev => prev + socketNotifications.length);
     }
-  }, [socketNotifications]);
+  }, [socketNotifications, isAuthenticated]);
 
   // Mark as read
   const markAsRead = async (ids: string[]) => {
+    if (!isAuthenticated || !token) return;
+    
     try {
       await notificationService.markAsRead(ids);
       setNotifications(prev =>
@@ -61,6 +90,8 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
 
   // Mark all as read
   const markAllAsRead = async () => {
+    if (!isAuthenticated || !token) return;
+    
     try {
       await notificationService.markAllAsRead();
       setNotifications(prev => prev.map(n => ({ ...n, isRead: true })));
@@ -70,9 +101,13 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
     }
   };
 
+  // ✅ Clear notifications on logout
   useEffect(() => {
-    loadNotifications();
-  }, []);
+    if (!isAuthenticated) {
+      setNotifications([]);
+      setUnreadCount(0);
+    }
+  }, [isAuthenticated]);
 
   return (
     <NotificationContext.Provider

@@ -20,7 +20,8 @@ interface CreatePostFormProps {
   token: string | null;
   onSuccess?: () => void;
   initialData?: any; 
-  isEditing?: boolean; 
+  isEditing?: boolean;
+  isInline?: boolean; 
 }
 
 const draftStorage = localforage.createInstance({
@@ -33,7 +34,8 @@ const CreatePostForm: React.FC<CreatePostFormProps> = ({
   token, 
   onSuccess, 
   initialData, 
-  isEditing = false 
+  isEditing = false,
+  isInline = false, 
 }) => {
   const queryClient = useQueryClient();
   const { createNewPost, updateExistingPost, loading, error: backendError } = usePosts();
@@ -267,7 +269,12 @@ const CreatePostForm: React.FC<CreatePostFormProps> = ({
   queryClient.invalidateQueries({ queryKey: ['public-posts'] });
   queryClient.invalidateQueries({ queryKey: ['user-posts'] });
 
-      alert(isEditing ? "Post updated!" : "Post published!");
+  if (!isInline) {
+    alert(isEditing ? "Post updated!" : "Post published!");
+  }
+  
+  if (onSuccess) onSuccess();
+}
         
         if (!isEditing && publishStatus === 'published') {
           setFormData({ 
@@ -285,7 +292,7 @@ const CreatePostForm: React.FC<CreatePostFormProps> = ({
         }
         
         if (onSuccess) onSuccess();
-      }
+      
     } catch (err: any) { 
       alert(err.message || "Error processing request"); 
     } finally { 
@@ -294,7 +301,7 @@ const CreatePostForm: React.FC<CreatePostFormProps> = ({
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col font-sans">
+    <div className={`${isInline ? 'min-h-[600px]' : 'min-h-screen'} bg-gray-50 flex flex-col font-sans`}>
       <style>{`
         .tiptap-content h1 { font-size: 2.25rem !important; font-weight: 800 !important; margin-bottom: 1.5rem !important; color: #111827 !important; display: block !important; }
         .tiptap-content h2 { font-size: 1.5rem !important; font-weight: 700 !important; margin-top: 2rem !important; margin-bottom: 1rem !important; color: #1f2937 !important; display: block !important; }
@@ -306,6 +313,8 @@ const CreatePostForm: React.FC<CreatePostFormProps> = ({
       `}</style>
 
       {/* Rest of JSX remains exactly the same */}
+{/* working */}
+{!isInline && (
       <header className="sticky top-0 z-30 bg-white border-b border-gray-200 h-16 px-4 sm:px-6 lg:px-8 flex items-center justify-between shadow-sm">
         <div className="flex items-center gap-4">
           <Link href="/dashboard" className="p-2 -ml-2 text-gray-500 hover:bg-gray-100 rounded-full transition-colors">
@@ -329,8 +338,10 @@ const CreatePostForm: React.FC<CreatePostFormProps> = ({
           </button>
         </div>
       </header>
+      )}
+      {/* working */}
 
-      <div className="flex-1 max-w-[1600px] mx-auto w-full p-4 sm:p-6 lg:p-8">
+      <div className={`flex-1 max-w-[1600px] mx-auto w-full ${isInline ? 'p-2' : 'p-4 sm:p-6 lg:p-8'}`}>
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 h-full">
           <div className="lg:col-span-8 flex flex-col gap-6">
             <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden flex flex-col min-h-[calc(100vh-200px)]">

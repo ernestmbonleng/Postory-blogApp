@@ -89,9 +89,12 @@ export default function Login() {
           </Button>
 
           <div className="flex flex-col items-center gap-4 mt-6">
-            <a href="#" className="text-sm font-medium text-primary hover:text-indigo-700 transition-colors">
+          <Link 
+              href="/auth/forgot-password" 
+              className="text-sm font-medium text-primary hover:text-indigo-700 transition-colors"
+            >
               Forgot password?
-            </a>
+            </Link>
             <div className="text-sm text-gray-500">
               Don't have an account?{' '}
               <Link href="/register" className="font-medium text-primary hover:text-indigo-700 transition-colors">

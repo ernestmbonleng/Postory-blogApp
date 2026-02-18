@@ -7,13 +7,14 @@ import { useAuth } from '@/src/hooks/useAuth';
 import Link from 'next/link';
 import { 
   Bell, Check, PlusCircle, Camera, Share2, Settings, 
-  Heart, MessageSquare, MoreVertical, Edit, Trash2, Download, 
+  Heart, Eye, MoreVertical, Edit, Trash2, Download, 
   Clock, Archive, Search, X, ImageIcon 
 } from 'lucide-react';
 import { format } from 'date-fns';
 import PostActionsDropdown from '@/src/component/PostActionsDropdown';
 import { useDashboardSearch } from '@/src/component/search/DashboardSearchShadow';
 import { SearchSuggestionsDropdown } from '@/src/component/search/SearchSuggestionsDropdown';
+import CreatePostForm from '@/src/component/CreatePostForm';
 
 // --- ADDED HELPERS & SUB-COMPONENT ---
 const getImageUrl = (thumbnail: string | undefined): string => {
@@ -71,6 +72,7 @@ export default function BlogChannelView() {
   const { token, userName, userId } = useAuth();
   const [activeTab, setActiveTab] = useState<'home' | 'about'>('home');
   const [deletingPostId, setDeletingPostId] = useState<string | null>(null);
+  const [editingPostId, setEditingPostId] = useState<string | null>(null);
 
   const {
     query,
@@ -120,7 +122,9 @@ export default function BlogChannelView() {
     enabled: !!token && !!blog,
     retry: false,
   });
-
+  
+  const subscriberCount = blog?.subscriberCount || 0;
+  
   const handleImageUpload = async (file: File, type: 'coverImage' | 'profileImage') => {
     if (!token) return;
     setUploading(true);
@@ -190,7 +194,7 @@ export default function BlogChannelView() {
   };
 
   const handleEditPost = (postId: string) => {
-    router.push(`/dashboard/edit-post/${postId}`);
+    setEditingPostId(postId);
   };
 
   if (blogLoading || postsLoading || !token) {
@@ -264,30 +268,57 @@ export default function BlogChannelView() {
             </div>
             <input ref={profileInputRef} type="file" hidden onChange={(e) => e.target.files && handleImageUpload(e.target.files[0], 'profileImage')} />
           </div>
-
-          <div className="flex-1 pt-6">
+<div className="flex-1 pt-6">
             <div className="flex flex-col lg:flex-row lg:items-start justify-between gap-6">
               <div className="max-w-3xl">
                 <h1 className="text-4xl font-black text-gray-900 tracking-tight flex items-center gap-3">
                   {blog?.title}
                   <Check size={20} className="bg-blue-500 text-white rounded-full p-1" />
                 </h1>
+                
+                {/* METADATA ROW: Includes Slug, Post Count, and Subscriber Count */}
                 <div className="flex items-center gap-4 mt-3 text-sm font-bold text-gray-400 uppercase tracking-widest">
+                  {/* Slug */}
                   <span className="text-gray-900">@{blog?.slug}</span>
+                  
                   <span className="w-1 h-1 rounded-full bg-gray-300"></span>
-                  <span>{posts.length} Posts</span>
+                  
+                  {/* Post Count */}
+                  <div className="flex items-center gap-1.5">
+                    <span className="text-gray-900">{posts.length}</span>
+                    <span>{posts.length === 1 ? 'Post' : 'Posts'}</span>
+                  </div>
+
+                  <span className="w-1 h-1 rounded-full bg-gray-300"></span>
+                  
+                  {/* Subscriber Count */}
+                  <div className="flex items-center gap-1.5">
+                    <span className="text-gray-900">{(blog?.subscriberCount || 0).toLocaleString()}</span>
+                    <span>{(blog?.subscriberCount || 0) === 1 ? 'Subscriber' : 'Subscribers'}</span>
+                  </div>
                 </div>
+
                 <p className="mt-5 text-gray-500 text-lg leading-relaxed font-light">
                   {blog?.description || "Curating the finest insights and stories for the modern reader."}
                 </p>
               </div>
 
+              {/* ACTION BUTTONS: Management mode (No Subscribe Button) */}
               <div className="flex items-center gap-3 shrink-0">
-                <button className="bg-black text-white px-8 py-3.5 rounded-full font-bold text-sm hover:bg-zinc-800 transition-all shadow-lg flex items-center gap-2">
-                  <Bell size={18} /> Subscribe
+                <Link 
+                  href="/dashboard/settings" 
+                  className="bg-gray-100 text-gray-900 px-8 py-3.5 rounded-full font-bold text-sm hover:bg-gray-200 transition-all flex items-center gap-2 border border-gray-200 shadow-sm"
+                >
+                  <Settings size={18} /> 
+                  <span>Edit Blog</span>
+                </Link>
+                
+                <button 
+                  title="Share Blog"
+                  className="p-3.5 rounded-full border border-gray-200 text-gray-500 hover:bg-gray-50 transition-colors"
+                >
+                  <Share2 size={20} />
                 </button>
-                <button className="p-3.5 rounded-full border border-gray-200 text-gray-500 hover:bg-gray-50 transition-colors"><Share2 size={20} /></button>
-                <button className="p-3.5 rounded-full border border-gray-200 text-gray-500 hover:bg-gray-50 transition-colors"><Settings size={20} /></button>
               </div>
             </div>
           </div>
@@ -313,12 +344,46 @@ export default function BlogChannelView() {
         <div className="py-12">
           {activeTab === 'home' && (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10">
+              {/* working */}
+
               {posts.map((post: any) => {
                 const isDraft = post.status?.toLowerCase() === 'draft';
                 const isArchived = post.status?.toLowerCase() === 'archived';
                 const destination = isDraft ? `/dashboard/edit-post/${post._id}` : `/posts/${post.slug || post._id}`;
                 const isOwner = !!userName && (post.author?.username === userName || blog?.authorName === userName);
 
+                if (editingPostId === post._id) {
+                  return (
+                    <div 
+                      key={post._id} 
+                      className="col-span-1 md:col-span-2 lg:col-span-3 bg-white rounded-[2rem] shadow-2xl border-2 border-indigo-100 overflow-hidden animate-in fade-in slide-in-from-bottom-4 duration-500 z-40"
+                    >
+                      <div className="bg-indigo-600 px-8 py-4 flex justify-between items-center">
+                        <h3 className="text-white font-black uppercase tracking-widest text-sm">WORDoo Editor</h3>
+                        <button 
+                          onClick={() => setEditingPostId(null)}
+                          className="text-white/80 hover:text-white flex items-center gap-2 font-bold text-xs bg-white/10 px-4 py-2 rounded-full transition-all"
+                        >
+                          <X size={16} /> Close & Discard
+                        </button>
+                      </div>
+                      
+                      <div className="p-2">
+                         <CreatePostForm 
+                           token={token}
+                           isEditing={true}
+                           isInline={true}
+                           initialData={post}
+                           onSuccess={() => {
+                             setEditingPostId(null);
+                             queryClient.invalidateQueries({ queryKey: ['user-posts', token] });
+                           }}
+                         />
+                      </div>
+                    </div>
+                  );
+                }
+                /* working */
                 return (
                   <article key={post._id} className="group flex flex-col cursor-pointer relative">
                     {deletingPostId === post._id && (
@@ -379,7 +444,7 @@ export default function BlogChannelView() {
                         </h4>
                         {!isDraft && !isArchived && (
                           <div className="flex items-center gap-4 pt-2 text-gray-400">
-                            <span className="flex items-center gap-1 text-xs font-bold"><MessageSquare size={14} /> {post.views || 0}</span>
+                            <span className="flex items-center gap-1 text-xs font-bold"><Eye size={14} /> {post.views || 0}</span>
                             <span className="flex items-center gap-1 text-xs font-bold"><Heart size={14} /> {post.likes || 0}</span>
                           </div>
                         )}
