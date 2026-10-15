@@ -7,12 +7,12 @@ export default function VerifyResetCodePage() {
   const [email, setEmail] = useState('');
   const [resetCode, setResetCode] = useState(['', '', '', '', '', '']);
   const [isLoading, setIsLoading] = useState(false);
-  const [isResendLoading, setIsResendLoading] = useState(false); // Separate loading for resend
+  const [isResendLoading, setIsResendLoading] = useState(false); 
   const [error, setError] = useState('');
-  const [success, setSuccess] = useState(''); // Add success message
+  const [success, setSuccess] = useState(''); 
   const [timeLeft, setTimeLeft] = useState(900);
   const [expiryTime, setExpiryTime] = useState<number | null>(null);
-  const [canResend, setCanResend] = useState(false); // Control resend availability
+  const [canResend, setCanResend] = useState(false); 
 
   useEffect(() => {
     const storedEmail = sessionStorage.getItem('resetEmail');
@@ -48,7 +48,7 @@ export default function VerifyResetCodePage() {
           clearInterval(timer);
           sessionStorage.removeItem('resetExpiry');
           sessionStorage.removeItem('resetEmail');
-          setCanResend(true); // Enable resend when expired
+          setCanResend(true); 
           return 0;
         }
         return prev - 1;
@@ -58,9 +58,9 @@ export default function VerifyResetCodePage() {
     return () => clearInterval(timer);
   }, [router]);
 
-  // Enable resend after 60 seconds (or when code expires)
+
   useEffect(() => {
-    if (timeLeft < 840 || timeLeft === 0) { // 60 seconds = 900 - 60 = 840
+    if (timeLeft < 840 || timeLeft === 0) { 
       setCanResend(true);
     } else {
       setCanResend(false);
@@ -79,7 +79,7 @@ export default function VerifyResetCodePage() {
     const newCode = [...resetCode];
     newCode[index] = value.toUpperCase();
     setResetCode(newCode);
-    setError(''); // Clear error when user types
+    setError('');
 
     if (value && index < 5) {
       const nextInput = document.getElementById(`code-${index + 1}`);
@@ -129,14 +129,14 @@ export default function VerifyResetCodePage() {
     try {
       await passwordResetService.resendResetCode(email);
       
-      // Reset timer
+  
       const newExpiry = Date.now() + 15 * 60 * 1000;
       sessionStorage.setItem('resetExpiry', newExpiry.toString());
       setExpiryTime(newExpiry);
       setTimeLeft(900);
       setResetCode(['', '', '', '', '', '']);
       setSuccess('New code sent successfully!');
-      setCanResend(false); // Disable resend button again
+      setCanResend(false);
     } catch (err: any) {
       setError(err.message || 'Failed to resend code. Please try again.');
     } finally {

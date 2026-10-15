@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
-import { MoreVertical, Edit, Trash2, Download, Eye, EyeOff, Link as LinkIcon } from 'lucide-react';
+import { MoreVertical, Edit, Trash2, Eye, Link as LinkIcon } from 'lucide-react';
 
 interface PostActionsDropdownProps {
   postId: string;
@@ -29,26 +29,20 @@ export default function PostActionsDropdown({
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
-
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
         setIsOpen(false);
       }
     };
-
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
- 
-  if (!isOwner) {
-    return null;
-  }
+  if (!isOwner) return null;
 
   return (
     <div className="relative" ref={dropdownRef}>
-
       <button
         onClick={() => setIsOpen(!isOpen)}
         className="p-1.5 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
@@ -82,7 +76,7 @@ export default function PostActionsDropdown({
             Edit Post
           </button>
 
-          {onToggleVisibility && (
+          {onToggleVisibility && currentStatus !== 'published' && (
             <button
               onClick={() => {
                 onToggleVisibility();
@@ -90,30 +84,8 @@ export default function PostActionsDropdown({
               }}
               className="w-full flex items-center px-4 py-2.5 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800"
             >
-              {currentStatus === 'published' ? (
-                <>
-                  <EyeOff className="w-4 h-4 mr-3" />
-                  Move to Draft
-                </>
-              ) : (
-                <>
-                  <Eye className="w-4 h-4 mr-3" />
-                  Publish Now
-                </>
-              )}
-            </button>
-          )}
-
-          {onDownload && (
-            <button
-              onClick={() => {
-                onDownload();
-                setIsOpen(false);
-              }}
-              className="w-full flex items-center px-4 py-2.5 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800"
-            >
-              <Download className="w-4 h-4 mr-3" />
-              Download Post
+              <Eye className="w-4 h-4 mr-3" />
+              Publish Now
             </button>
           )}
 

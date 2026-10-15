@@ -16,12 +16,24 @@ export default function ForgotPasswordPage() {
     setError('');
 
     try {
-      await passwordResetService.forgotPassword(email);
-      setSuccess(true);
-      // Store email for next step
+      console.log("Attempting to send reset code...");
+      const response = await passwordResetService.forgotPassword(email);
+      console.log("Server success:", response.message);
+
+
       sessionStorage.setItem('resetEmail', email);
+
+      const expiry = Date.now() + 15 * 60 * 1000;
+      sessionStorage.setItem('resetExpiry', expiry.toString());
+
+
+      setTimeout(() => {
+        router.push('/auth/verify-reset-code');
+      }, 100);
+
     } catch (err: any) {
-      setError(err.message || 'Something went wrong');
+      console.error("Submission error:", err);
+      setError(err.response?.data?.message || err.message || 'Something went wrong');
     } finally {
       setIsLoading(false);
     }

@@ -48,7 +48,7 @@ const EditorsPick = () => {
             href={`/posts/${post.slug}`} 
             className="flex items-center gap-4 group"
           >
-            {/* Circular Thumbnail */}
+
             <div className="w-16 h-16 rounded-full overflow-hidden flex-shrink-0 border-2 border-white shadow-md bg-gray-100">
               <img 
                 src={getImageUrl(post.thumbnail)} 

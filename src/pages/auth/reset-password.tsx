@@ -29,8 +29,8 @@ export default function ResetPasswordPage() {
   }, []);
 
   const validatePassword = () => {
-    if (password.length < 8) {
-      return 'Password must be at least 8 characters';
+    if (password.length < 6) {
+      return 'Password must be at least 6 characters';
     }
     if (password !== confirmPassword) {
       return 'Passwords do not match';
@@ -51,11 +51,19 @@ export default function ResetPasswordPage() {
     setError('');
 
     try {
-      await passwordResetService.resetPassword(email, resetCode, password);
-      setSuccess(true);
-      // Clear session storage
-      sessionStorage.removeItem('resetEmail');
-      sessionStorage.removeItem('resetCode');
+      const data = await passwordResetService.resetPassword(email, resetCode, password);
+      if (data && data.accessToken) {
+        localStorage.setItem('auth_token', data.accessToken); 
+        
+
+        sessionStorage.removeItem('resetEmail');
+
+        sessionStorage.removeItem('resetCode');
+
+        router.push('/dashboard');
+    } else {
+      setSuccess(true); 
+   }
     } catch (err: any) {
       setError(err.message || 'Failed to reset password');
     } finally {
@@ -77,7 +85,7 @@ export default function ResetPasswordPage() {
             Your password has been changed. You can now sign in with your new password.
           </p>
           <Link
-            href="/auth/login"
+            href="/login"
             className="block w-full bg-indigo-600 text-white py-3 rounded-lg font-medium hover:bg-indigo-700"
           >
             Sign in

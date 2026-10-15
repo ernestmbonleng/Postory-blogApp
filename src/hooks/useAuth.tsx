@@ -3,6 +3,13 @@ import { getToken, setToken as setCookieToken, clearToken } from '../services/au
 import AuthRequiredModal from '../component/modals/AuthRequiredModal';
 import { jwtDecode } from 'jwt-decode';
 
+
+export interface AuthUser {
+  id: string;
+  name: string;
+  email: string;
+}
+
 interface AuthContextType {
   token: string | null;
   userName: string | null;
@@ -10,7 +17,8 @@ interface AuthContextType {
   email: string | null;         
   role: string | null;         
   hasBlog: boolean;           
-  tenantId: string | null;    
+  tenantId: string | null;  
+  user: AuthUser | null;  
   isAuthModalOpen: boolean;
   openAuthModal: () => void;
   closeAuthModal: () => void;
@@ -31,8 +39,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [loading, setLoading] = useState(true);
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
 
-  // --- 1. Define Logout First ---
-  // We use useCallback so it can be safely called inside decodeAndSetUser
+
   const logout = useCallback(() => {
     clearToken();
     localStorage.removeItem('userData');
@@ -47,12 +54,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setTenantId(null);
   }, []);
 
-  // --- 2. Define Decode logic ---
+
   const decodeAndSetUser = useCallback((token: string) => {
     try {
       const decoded: any = jwtDecode(token);
       
-      // Check if token is expired
+
       const currentTime = Date.now() / 1000;
       if (decoded.exp && decoded.exp < currentTime) {
         console.warn('Token expired. Logging out.');
@@ -77,11 +84,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }));
     } catch (error) {
       console.error('Failed to decode token:', error);
-      logout(); // Wipe state if token is malformed
+      logout();
     }
   }, [logout]);
 
-  // --- 3. Run Initial Auth Check ---
+
   useEffect(() => {
     const storedToken = getToken();
     
@@ -89,15 +96,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setToken(storedToken);
       decodeAndSetUser(storedToken);
     } else {
-      // No token found? Wipe everything. 
-      // This prevents "Ghost Data" from previous users.
+
       logout();
     }
     
     setLoading(false);
   }, [decodeAndSetUser, logout]);
 
-  // --- 4. Helper Functions ---
+
   const openAuthModal = () => setIsAuthModalOpen(true);
   const closeAuthModal = () => setIsAuthModalOpen(false);
 
@@ -112,6 +118,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     <AuthContext.Provider value={{
       token,
       userName,
+      user: {
+        id: userId || '',
+        name: userName || '',
+        email: email || ''
+      },
       userId,         
       email,          
       role,          

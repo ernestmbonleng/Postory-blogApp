@@ -10,11 +10,11 @@ import {
   FileEdit,
   Upload,
 } from "lucide-react";
-// Import the auth hook
+
 import { useAuth } from "@/src/hooks/useAuth";
 
 export default function LandingPage() {
-  // Access the token from your auth context
+
   const { token } = useAuth();
 
   return (
@@ -33,7 +33,7 @@ export default function LandingPage() {
                     o
                   </span>
 
-                  {/* Brand accent dot */}
+                
                   <span className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-1.5 h-1.5 
                      bg-indigo-500 rounded-full 
                      opacity-0 group-hover:opacity-100 
@@ -342,7 +342,7 @@ export default function LandingPage() {
                                         o
                                     </span>
 
-                                    {/* Brand accent dot */}
+                                   
                             <span className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-1.5 h-1.5 
                      bg-indigo-500 rounded-full 
                      opacity-0 group-hover:opacity-100 

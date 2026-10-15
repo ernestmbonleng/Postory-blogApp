@@ -12,8 +12,16 @@ export const commentService = {
     return response.data;
   },
 
-  async toggleLike(postId: string): Promise<{ liked: boolean; likes: number }> {
-    const response = await api.post(`/posts/${postId}/like`);
+  async toggleLikeComment(postId: string, commentId: string): Promise<{ liked: boolean; likes: number }> {
+    const response = await api.post(`/posts/${postId}/comments/${commentId}/like`);
+    return response.data;
+  },
+
+  async addReply(postId: string, commentId: string, content: string): Promise<Comment> {
+    const response = await api.post(`/posts/${postId}/comments`, { 
+      content, 
+      parentCommentId: commentId 
+    });
     return response.data;
   }
 };

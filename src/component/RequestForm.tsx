@@ -20,7 +20,7 @@ const ResetPasswordForm = () => {
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
-    setError(''); // Clear error on input change
+    setError('');
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -99,7 +99,7 @@ const ResetPasswordForm = () => {
             <input
               type="text"
               name="token"
-              value={formData.token}  // ✅ ADDED value binding
+              value={formData.token}
               onChange={handleChange}
               placeholder="Enter the 6-digit code"
               required
@@ -112,27 +112,25 @@ const ResetPasswordForm = () => {
             <input
               type="password"
               name="newPassword"
-              value={formData.newPassword}  // ✅ ADDED value binding
+              value={formData.newPassword}
               onChange={handleChange}
               placeholder="••••••••"
               required
               className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:bg-white outline-hidden transition-all text-gray-900"
-              // ✅ outline-none → outline-hidden ⬆️
+       
             />
           </div>
 
-          {/* ✅ FIXED: Added value binding + outline-hidden */}
           <div>
             <label className="block text-sm font-bold text-gray-700 mb-2">Confirm Password</label>
             <input
               type="password"
               name="confirm"
-              value={formData.confirm}  // ✅ ADDED value binding
+              value={formData.confirm}  
               onChange={handleChange}
               placeholder="••••••••"
               required
               className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:bg-white outline-hidden transition-all text-gray-900"
-              // ✅ outline-none → outline-hidden ⬆️
             />
           </div>
 

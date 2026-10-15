@@ -12,7 +12,9 @@ export interface Post {
   seoDescription?: string;
   readingTime?: number;
   likes: number;             
-  likedBy: string[];         
+  likedBy: string[];   
+  isLikedByMe?: boolean;
+  likesCount: number;      
   commentsCount: number;     
   views: number;
   author?: {

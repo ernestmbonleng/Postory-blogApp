@@ -10,7 +10,7 @@ export function setToken(token: string) {
   Cookies.set(TOKEN_KEY, token, { 
     expires: 7, 
     path: '/', 
-    sameSite: 'lax', // Needed for redirects
+    sameSite: 'lax', 
     secure: process.env.NODE_ENV === 'production' 
   });
 }

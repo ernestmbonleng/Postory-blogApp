@@ -17,6 +17,7 @@ export interface Blog {
   authorName: string;
   subscriberCount: number;
   isSubscribed?: boolean;
+  postCount: number;
   notificationPreferences: {
     newPosts: boolean;
     comments: boolean;

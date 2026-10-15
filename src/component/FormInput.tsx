@@ -12,7 +12,7 @@ export function FormInput({ label, type = 'text', value, onChange }: FormInputPr
       <input
         type={type}
         value={value}
-        onChange={(e) => onChange(e.target.value)}  // send string, not event
+        onChange={(e) => onChange(e.target.value)}  
         className="rounded-md border px-3 py-2 focus:outline-none focus:ring-2 focus:ring-black"
       />
     </div>

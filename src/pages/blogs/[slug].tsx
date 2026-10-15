@@ -14,17 +14,18 @@ import {
   Share2,
   Loader2,
   Heart,
-  MessageSquare,
   Search,
   X,
   ImageIcon,
+  Eye,
 } from "lucide-react";
 import { format } from "date-fns";
 import { useDashboardSearch } from "@/src/component/search/DashboardSearchShadow";
 import { SearchSuggestionsDropdown } from "@/src/component/search/SearchSuggestionsDropdown";
 import { useAuth } from "@/src/hooks/useAuth";
+import ShareDropdown from "@/src/component/ShareDropdown";
 
-// --- HELPERS ---
+
 const getImageUrl = (thumbnail: string | undefined): string => {
   if (!thumbnail || thumbnail.trim() === "")
     return "https://via.placeholder.com/400x250?text=placeholder";
@@ -35,7 +36,7 @@ const getImageUrl = (thumbnail: string | undefined): string => {
     : `${apiUrl}/${thumbnail}`;
 };
 
-// --- BRANDED THUMBNAIL COMPONENT ---
+
 const PostThumbnail = ({ post }: { post: any }) => {
   const imageUrl = getImageUrl(post.thumbnail);
   const isPlaceholder = imageUrl.includes("placeholder.com");
@@ -85,8 +86,8 @@ export default function PublicBlogChannelView() {
   const [activeTab, setActiveTab] = useState<"home" | "about">("home");
   const queryClient = useQueryClient();
   const { token, userId, userName } = useAuth();
-const isAuthenticated = !!token; // Create the boolean helper right here
-const user = { token, _id: userId, username: userName }; // Create a user object shim
+const isAuthenticated = !!token; 
+const user = { token, _id: userId, username: userName }; 
   const [isSubscribed, setIsSubscribed] = useState(false);
   const [subscriberCount, setSubscriberCount] = useState(0);
   const [subLoading, setSubLoading] = useState(false);
@@ -103,9 +104,9 @@ const user = { token, _id: userId, username: userName }; // Create a user object
   });
 
   useQuery({
-    queryKey: ["subscription-status", blog?._id, userId], // Use userId from useAuth directly
+    queryKey: ["subscription-status", blog?._id, userId], 
     queryFn: async () => {
-      // Use token directly from useAuth destructuring
+      
       if (!blog?._id || !isAuthenticated || !token) return null;
       const status = await getSubscriptionStatus(blog._id, token);
       
@@ -135,10 +136,10 @@ const user = { token, _id: userId, username: userName }; // Create a user object
   
     setSubLoading(true);
     try {
-      // We pass the CURRENT state. The service uses this to decide POST vs DELETE.
+    
       const result = await toggleSubscription(blog._id, user.token, isSubscribed);
       
-      // ALWAYS use the data returned from the server to update your state
+   
       queryClient.invalidateQueries({ 
         queryKey: ["subscription-status", blog._id, user._id] 
       });
@@ -216,7 +217,7 @@ const user = { token, _id: userId, username: userName }; // Create a user object
         </div>
       </nav>
 
-      {/* HERO BANNER */}
+  
       <div className="relative w-full h-[320px] md:h-[450px] bg-gray-100 overflow-hidden">
         <img
           src={
@@ -230,7 +231,7 @@ const user = { token, _id: userId, username: userName }; // Create a user object
       </div>
 
       <div className="max-w-7xl mx-auto px-6 md:px-12">
-        {/* PROFILE SECTION */}
+ 
         <div className="relative flex flex-col md:flex-row items-start gap-8 pb-10 border-b border-gray-100">
           <div className="relative -mt-24 z-20">
             <div className="w-40 h-40 md:w-48 md:h-48 rounded-full bg-white p-1.5 shadow-2xl overflow-hidden">
@@ -256,22 +257,21 @@ const user = { token, _id: userId, username: userName }; // Create a user object
                   />
                 </h1>
                 <div className="flex items-center gap-4 mt-3 text-sm font-bold text-gray-400 uppercase tracking-widest">
-  {/* The Slug */}
+ 
   <span className="text-gray-900">@{blog.slug}</span>
   
-  {/* Dot Separator */}
+
   <span className="w-1 h-1 rounded-full bg-gray-300"></span>
   
-  {/* The Nested Flex for Post Count */}
+
   <div className="flex items-center gap-1.5">
     <span className="text-gray-900">{posts.length}</span>
     <span>{posts.length === 1 ? 'post' : 'posts'}</span>
   </div>
 
-  {/* Dot Separator */}
   <span className="w-1 h-1 rounded-full bg-gray-300"></span>
   
-  {/* The Nested Flex for Subscribers */}
+
   <div className="flex items-center gap-1.5">
     <span className="text-gray-900">{subscriberCount.toLocaleString()}</span>
     <span>{subscriberCount === 1 ? 'subscriber' : 'subscribers'}</span>
@@ -306,9 +306,11 @@ const user = { token, _id: userId, username: userName }; // Create a user object
                     : "Subscribe"}
                 </button>
 
-                <button className="p-3.5 rounded-full border border-gray-200 text-gray-500 hover:bg-gray-50 transition-colors">
-                  <Share2 size={20} />
-                </button>
+                <ShareDropdown
+  url={typeof window !== 'undefined' ? window.location.href : ''}
+  title="Check out this post"
+  description="Share this content"
+/>
               </div>
             </div>
           </div>
@@ -331,7 +333,7 @@ const user = { token, _id: userId, username: userName }; // Create a user object
           ))}
         </div>
 
-        {/* POSTS CONTENT */}
+    
         <div className="py-12">
           {activeTab === "home" ? (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10">
@@ -342,7 +344,7 @@ const user = { token, _id: userId, username: userName }; // Create a user object
                   className="group flex flex-col"
                 >
                   <div className="relative aspect-[16/10] rounded-[2rem] overflow-hidden mb-5 bg-gray-50 shadow-sm group-hover:shadow-xl transition-all duration-500">
-                    {/* --- INTEGRATED BRANDED THUMBNAIL --- */}
+                
                     <PostThumbnail post={post} />
                   </div>
                   <div className="space-y-3 px-2">
@@ -360,7 +362,7 @@ const user = { token, _id: userId, username: userName }; // Create a user object
                     </h4>
                     <div className="flex items-center gap-4 pt-2 text-gray-400">
                       <span className="flex items-center gap-1 text-xs font-bold">
-                        <MessageSquare size={14} /> {post.views || 0}
+                        <Eye size={14} /> {post.views || 0}
                       </span>
                       <span className="flex items-center gap-1 text-xs font-bold">
                         <Heart size={14} /> {post.likes || 0}

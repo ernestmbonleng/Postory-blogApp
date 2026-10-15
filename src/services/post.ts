@@ -7,6 +7,7 @@ import {
   ErrorResponse
 } from '@/src/types/posts';
 
+
 const API_URL = process.env.NEXT_PUBLIC_API_URL ;
 
 const api = axios.create({
@@ -107,7 +108,7 @@ export async function getPublicPostDetail(slug: string): Promise<ApiResponse<Pos
 
 
 export async function getTenantPublicPosts(
-  options?: { page?: number; limit?: number; category?: string; } // Added category here
+  options?: { page?: number; limit?: number; category?: string; } 
 ): Promise<ApiResponse<{ posts: Post[] }>> { 
   try {
     const params = new URLSearchParams();
@@ -294,7 +295,7 @@ export const getPostById = async (id: string, token?: string) => {
   const apiUrl = process.env.NEXT_PUBLIC_API_URL;
   
   try {
-    // Use provided token or get from storage
+
     const authToken = token || (typeof window !== 'undefined' 
       ? sessionStorage.getItem('access_token')
       : null);
@@ -303,7 +304,6 @@ export const getPostById = async (id: string, token?: string) => {
       'Content-Type': 'application/json',
     };
 
-    // Add Authorization header if token exists
     if (authToken) {
       headers['Authorization'] = `Bearer ${authToken}`;
     }
@@ -311,7 +311,7 @@ export const getPostById = async (id: string, token?: string) => {
     const response = await fetch(`${apiUrl}/posts/${id}`, {
       method: 'GET',
       headers,
-      credentials: 'include', // Include cookies if needed
+      credentials: 'include', 
     });
 
     if (!response.ok) {
@@ -325,7 +325,7 @@ export const getPostById = async (id: string, token?: string) => {
         errorMessage = response.statusText || errorMessage;
       }
 
-      // Create user-friendly error messages
+
       switch (response.status) {
         case 401:
           errorMessage = 'Authentication required. Please log in.';
@@ -364,8 +364,7 @@ export async function getPostViews(postId: string, token?: string): Promise<numb
       `/posts/${postId}`,
       config
     );
-
-    // Return the view count from the post data
+    
     return response.data.data?.views || 0;
   } catch (error) {
     console.error('Error fetching post views:', error);
@@ -390,5 +389,32 @@ export async function getPostsWithViews(token?: string): Promise<Post[]> {
   } catch (error) {
     console.error('Error fetching posts with views:', error);
     return [];
+  }
+}
+
+
+export async function toggleLike(postId: string): Promise<{ liked: boolean; likes: number }> {
+  try {
+    const { getToken } = await import('./auth-storage');
+    const token = getToken();
+    
+    const response = await axios.post(
+      `${API_URL}/posts/${postId}/like`,
+      {},
+      {
+        headers: token ? { Authorization: `Bearer ${token}` } : {},
+        withCredentials: true
+      }
+    );
+    
+    return response.data;
+  } catch (error) {
+    const axiosError = error as AxiosError<ErrorResponse>;
+    console.error("Like API Error:", axiosError.response?.data || axiosError.message);
+    throw {
+      success: false,
+      message: axiosError.response?.data?.message || 'Failed to toggle like',
+      statusCode: axiosError.response?.status || 500,
+    };
   }
 }

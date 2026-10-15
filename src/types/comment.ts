@@ -9,6 +9,9 @@ export interface Comment {
   likedBy: string[];
   createdAt: string;
   updatedAt: string;
+  likesCount?: number;
+  isLikedByMe?: boolean;
+  parentCommentId?: string | null;
 }
 
 export interface CreateCommentDto {

@@ -1,6 +1,5 @@
 @import "tailwindcss";
 
-/* Add these to your global CSS */
 @keyframes toast-progress {
   from { width: 100%; }
   to { width: 0%; }
@@ -10,7 +9,7 @@
   animation: toast-progress linear;
 }
 
-/* Tailwind animation for slide-in */
+
 @keyframes slideInFromRight {
   0% {
     transform: translateX(100%);

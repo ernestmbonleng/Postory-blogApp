@@ -69,7 +69,7 @@ const PostCard: React.FC<PostCardProps> = ({ post, onDelete, canDelete }) => {
   const identifier = post.slug || post.id || post._id;
   const detailHref = `/posts/${identifier}`;
   
-  // Safety check: Ensure likes is always a number
+
   const displayLikes = typeof post.likes === 'number' ? post.likes : (post.likedBy?.length || 0);
   const displayComments = post.commentsCount || 0;
   const displayViews = post.views || 0;
@@ -104,9 +104,8 @@ const PostCard: React.FC<PostCardProps> = ({ post, onDelete, canDelete }) => {
           {post.excerpt || (post.content ? post.content.replace(/<[^>]*>/g, '').substring(0, 120) + '...' : 'No content available')}
         </p>
 
-        {/* --- STATS SECTION WITH DEFAULT 0 --- */}
         <div className="flex items-center gap-4 mb-6 py-3 border-y border-gray-100">
-          {/* Likes */}
+
           <div className="flex items-center gap-1.5">
             <Heart 
               size={18} 
@@ -115,13 +114,11 @@ const PostCard: React.FC<PostCardProps> = ({ post, onDelete, canDelete }) => {
             <span className="text-sm font-bold text-gray-700">{displayLikes}</span>
           </div>
 
-          {/* Comments */}
           <div className="flex items-center gap-1.5">
             <MessageCircle size={18} className="text-gray-400" />
             <span className="text-sm font-bold text-gray-700">{displayComments}</span>
           </div>
 
-          {/* Views */}
           <div className="flex items-center gap-1.5 ml-auto">
             <Eye size={18} className="text-gray-300" />
             <span className="text-xs text-gray-400">{displayViews}</span>

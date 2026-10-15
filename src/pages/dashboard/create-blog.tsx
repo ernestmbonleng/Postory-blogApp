@@ -89,7 +89,7 @@ export default function CreateBlogPage() {
                 o
               </span>
 
-              {/* Brand accent dot */}
+          
               <span className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-1.5 h-1.5
                      bg-indigo-500 rounded-full
                      opacity-0 group-hover:opacity-100
