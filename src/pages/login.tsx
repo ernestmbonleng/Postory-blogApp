@@ -2,7 +2,6 @@ import { useState } from 'react';
 import { useMutation } from '@tanstack/react-query';
 import { useRouter } from 'next/router';
 import Link from 'next/link';
-import { signIn } from 'next-auth/react';
 
 import { login as loginApi } from '../services/auth';
 import { LoginDto } from '../types/auth';
@@ -31,9 +30,10 @@ export default function Login() {
     mutation.mutate(form);
   };
 
-  // Trigger Google OAuth flow
+  // Trigger Google OAuth flow via backend
   const handleGoogleLogin = () => {
-    signIn('google', { callbackUrl: '/dashboard' });
+    const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000";
+    window.location.href = `${apiUrl}/auth/google`;
   };
 
   return (

@@ -10,13 +10,12 @@ export default function AuthCallback() {
 
     if (!router.isReady) return;
 
-    const { token, user } = router.query;
+    const { token } = router.query;
 
-    if (token && typeof token === 'string' && user && typeof user === 'string') {
+    if (token && typeof token === 'string') {
       console.log("Authentication successful, initializing session...");
 
-      login(token, JSON.parse(user)); 
-
+      login(token);
 
       router.replace('/dashboard');
     } else {
