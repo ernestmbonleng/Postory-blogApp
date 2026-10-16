@@ -1,5 +1,5 @@
 import axios from 'axios';
-import { getToken } from './auth-storage'
+import { getToken, clearToken } from './auth-storage'
 
 const api = axios.create({
   baseURL: process.env.NEXT_PUBLIC_API_URL, 
@@ -20,6 +20,10 @@ api.interceptors.response.use(
     return response;
   },
   (error) => {
+    if (error.response?.status === 403) {
+      clearToken();
+      window.location.reload();
+    }
     return Promise.reject(error);
   }
 );

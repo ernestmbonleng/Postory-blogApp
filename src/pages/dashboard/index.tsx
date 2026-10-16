@@ -252,11 +252,14 @@ export default function DashboardPage() {
                       <div className="flex flex-wrap items-center justify-between gap-4 pt-4 border-t border-gray-100">
                         <div className="flex items-center gap-2">
                           <div className="w-8 h-8 rounded-full bg-indigo-500 flex items-center justify-center text-[10px] font-bold text-white overflow-hidden shrink-0 border border-gray-100">
-                            {/* CORRECTION #11: Blog Profile Pic logic */}
-                            {post.blog?.profileImage ? (
-                              <img src={getImageUrl(post.blog.profileImage)} alt="" className="w-full h-full object-cover" />
+                            {post.author?.profilePicture || post.blog?.profileImage ? (
+                              <img
+                                src={getImageUrl(post.author?.profilePicture || post.blog?.profileImage)}
+                                alt={`${post.author?.displayName || post.blog?.authorName || "Author"}'s profile`}
+                                className="w-full h-full object-cover"
+                              />
                             ) : (
-                              <span>{(post.blog?.authorName || post.blog?.title || "U").charAt(0).toUpperCase()}</span>
+                              <span>{(post.author?.displayName || post.blog?.authorName || post.blog?.title || "U").charAt(0).toUpperCase()}</span>
                             )}
                           </div>
                           <div className="flex flex-col">

@@ -84,6 +84,8 @@ export const getPublicPopular = async () => {
 export const getPublicFeatured = async () => {
   try {
     const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/public/featured`);
+    console.log('Fetching from:', process.env.NEXT_PUBLIC_API_URL);
+
     if (!res.ok) throw new Error('Failed to fetch editor picks');
     return res.json();
   } catch (error) {

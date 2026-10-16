@@ -31,6 +31,20 @@ export const DashboardLayout: React.FC<LayoutProps> = ({ children }) => {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
+  const { data: userProfile } = useQuery({
+    queryKey: ["user-profile", token],
+    queryFn: async () => {
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000"}/users/profile`,
+        { headers: { Authorization: `Bearer ${token}` } },
+      );
+      if (!response.ok) throw new Error("Could not load profile picture");
+      const payload = await response.json();
+      return payload.data ?? payload;
+    },
+    enabled: !!token,
+  });
+
   // SEARCH HOOK - Add this here
   const {
     query,
@@ -190,7 +204,15 @@ export const DashboardLayout: React.FC<LayoutProps> = ({ children }) => {
                     className="flex items-center gap-2 focus:outline-none p-1 rounded-full hover:bg-gray-50 transition-colors"
                   >
                     <div className="w-9 h-9 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-700 font-bold border border-indigo-50 shadow-sm">
-                      {userName ? userName.charAt(0).toUpperCase() : "U"}
+                      {userProfile?.profilePicture || userProfile?.picture ? (
+                        <img
+                          src={userProfile.profilePicture || userProfile.picture}
+                          alt={`${userName || "User"}'s profile`}
+                          className="w-full h-full rounded-full object-cover"
+                        />
+                      ) : (
+                        userName ? userName.charAt(0).toUpperCase() : "U"
+                      )}
                     </div>
                     <ChevronDown
                       size={16}
@@ -258,7 +280,7 @@ export const DashboardLayout: React.FC<LayoutProps> = ({ children }) => {
                   >
                     Login
                   </Button>
-                </Link>
+                </Link>                                                                                                                                                                    
               </div>
             )}
           </div>

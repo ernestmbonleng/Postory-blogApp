@@ -2,7 +2,7 @@ import React, { createContext, useContext, useEffect, useState, useCallback } fr
 import { useNotificationSocket } from '@/src/hooks/useNotificationSocket';
 import { notificationService } from '@/src/services/notification.service';
 import { AppNotification } from '@/src/types/notification';
-import { useAuth } from '@/src/hooks/useAuth'; 
+import { getToken } from '@/src/services/auth-storage';
 
 interface NotificationContextType {
   notifications: AppNotification[];
@@ -23,7 +23,7 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
   const { notifications: socketNotifications, setNotifications: setSocketNotifications } = 
     useNotificationSocket();
   
-    const { token } = useAuth();
+    const token = getToken();
     const isAuthenticated = !!token; 
 
 
@@ -56,8 +56,10 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
 
 
   useEffect(() => {
-    loadNotifications();
-  }, [loadNotifications]); 
+    if (isAuthenticated) {
+      loadNotifications();
+    }
+  }, [isAuthenticated, loadNotifications]); 
 
 
   useEffect(() => {

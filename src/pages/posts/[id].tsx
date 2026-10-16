@@ -185,8 +185,16 @@ export default function PostDetailPage({
           {post.title}
         </h1>
         <div className="flex items-center gap-4 py-6 border-y border-gray-100">
-          <div className="w-12 h-12 rounded-full bg-indigo-600 flex items-center justify-center text-white font-bold text-lg uppercase">
-            {post.author?.displayName?.charAt(0) || "U"}
+          <div className="w-12 h-12 rounded-full bg-indigo-600 flex items-center justify-center text-white font-bold text-lg uppercase overflow-hidden shrink-0">
+            {post.author?.profilePicture ? (
+              <img
+                src={post.author.profilePicture}
+                alt={`${post.author.displayName || "Author"}'s profile`}
+                className="w-full h-full object-cover"
+              />
+            ) : (
+              post.author?.displayName?.charAt(0) || "U"
+            )}
           </div>
           <div>
             <div className="text-gray-900 font-semibold">

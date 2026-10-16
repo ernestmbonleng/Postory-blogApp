@@ -111,7 +111,8 @@ const fetchUserProfile = async (token: string) => {
     const error = await response.json();
     throw new Error(error.message || 'Failed to fetch profile');
   }
-  return response.json();
+  const payload = await response.json();
+  return payload.data ?? payload;
 };
 
 export default function SettingsPage() {
@@ -143,6 +144,12 @@ export default function SettingsPage() {
   const [passwordSuccess, setPasswordSuccess] = useState(false);
   const [passwordError, setPasswordError] = useState('');
   const [avatarError, setAvatarError] = useState('');
+  const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!avatarPreview) return;
+    return () => URL.revokeObjectURL(avatarPreview);
+  }, [avatarPreview]);
 
   // Fetch user profile data
 const { data: userProfile, isLoading: profileLoading } = useQuery({
@@ -154,7 +161,7 @@ const { data: userProfile, isLoading: profileLoading } = useQuery({
 useEffect(() => {
   if (userProfile) {
     setFormData({
-      name: userProfile.name || '',
+      name: userProfile.displayName || userProfile.name || '',
       email: userProfile.email || '',
       bio: userProfile.bio || '',
     });
@@ -198,7 +205,14 @@ useEffect(() => {
 
   const uploadAvatarMutation = useMutation({
     mutationFn: uploadAvatar,
-    onSuccess: () => {
+    onSuccess: (result) => {
+      if (result?.data) {
+        queryClient.setQueryData(['user-profile', token], (current: any) => ({
+          ...current,
+          ...result.data,
+        }));
+      }
+      setAvatarPreview(null);
       queryClient.invalidateQueries({ queryKey: ['user-profile'] });
       setAvatarError('');
     },
@@ -264,6 +278,7 @@ useEffect(() => {
   const handleAvatarChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file || !token) return;
+    setAvatarError('');
 
     // Validate file size (5MB max)
     if (file.size > 5 * 1024 * 1024) {
@@ -277,6 +292,7 @@ useEffect(() => {
       return;
     }
 
+    setAvatarPreview(URL.createObjectURL(file));
     uploadAvatarMutation.mutate({ token, file });
   };
 
@@ -335,9 +351,9 @@ useEffect(() => {
               {/* Avatar with upload */}
               <div className="relative group">
                 <div className="w-20 h-20 rounded-full bg-indigo-600 flex items-center justify-center text-3xl font-bold border-4 border-slate-700 overflow-hidden">
-                  {userProfile?.profilePicture ? (
+                  {avatarPreview || userProfile?.profilePicture || userProfile?.picture ? (
                     <img 
-                      src={userProfile.profilePicture} 
+                      src={avatarPreview || userProfile.profilePicture || userProfile.picture} 
                       alt={formData.name}
                       className="w-full h-full object-cover"
                     />
